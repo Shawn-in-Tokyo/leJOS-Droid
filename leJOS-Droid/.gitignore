@@ -1,0 +1,4 @@
+.DS_Store
+bin/lejos/**/*
+bin/res*
+bin/class*

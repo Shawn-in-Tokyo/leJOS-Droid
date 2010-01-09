@@ -1,0 +1,9 @@
+The majority of the code of LeJOS-Droid is issued under a Mozilla
+Public License v1 - see the LICENSE file.  This is the license
+that lejos has always been issued under, as it originally included 
+Kekoa Proudfoot's librcx code, which was issued under that license.
+
+The Bluecove Bluetooth library, see  3rdparty/lib/bluecove.jar is issued 
+under the GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1.
+
+The Bluecove-GPL library is used on Linux. This uses the GNU GENERAL PUBLIC LICENSE Version 3.
