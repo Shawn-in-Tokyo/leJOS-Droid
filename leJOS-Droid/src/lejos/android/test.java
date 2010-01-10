@@ -23,20 +23,23 @@ import android.view.View;
 import android.widget.Button;
 
 public class test extends Activity {
+	
+	public static enum CONN_TYPE {LEJOS,LEGO}
+		
+	 
 
-    static final String TACHO_COUNT = "TachoCount";
+	public static final String TACHO_COUNT = "TachoCount";
     static final String BT_SEND = "BTSend";
     static final String YOUR_TURN = "YourTurn";
     static final String CONNECTING = "Connecting...";
-    static final int LEJOS = 1;
-    static final int LEGO = 2;
+    
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
 	super.onCreate(savedInstanceState);
 	setContentView(R.layout.main);
 
-	Button button;
+	
 	seupNXJCache();
 	setupTachoCount();
 	setupBTSend();
@@ -81,7 +84,8 @@ public class test extends Activity {
 
 		    public void onClick(View arg0) {
 			try {
-			    tachoCount();
+			 TachoCount tc = new TachoCount();
+			  tc.doInBackground(new Object[0]);//not passing in any args
 			} catch (Exception e) {
 			    Log.e(TACHO_COUNT, "failed to run:" + e.getMessage());
 			}
@@ -90,28 +94,7 @@ public class test extends Activity {
 		});
 	}
 
-    private void tachoCount() throws Exception {
-    	//we are going to talk to the standard Lego firmware so use LEGO
-	NXTConnector conn = connect(TACHO_COUNT, LEGO);
-	NXTCommand.getSingleton().setNXTComm(conn.getNXTComm());
-
-	Log.i(TACHO_COUNT, "Tachometer A: " + Motor.A.getTachoCount());
-	Log.i(TACHO_COUNT, "Tachometer C: " + Motor.C.getTachoCount());
-	Motor.A.rotate(5000);
-	Motor.C.rotate(-5000);
-	Thread.sleep(10000);
-	Sound.playTone(1000, 1000);
-	Log.i(TACHO_COUNT, "Tachometer A: " + Motor.A.getTachoCount());
-	Log.i(TACHO_COUNT, "Tachometer C: " + Motor.C.getTachoCount());
-	try {
-	    conn.close();
-	} finally {
-	    conn = null;
-	}
-
-    }
-
-    private NXTConnector connect(final String source, int connection_type) throws Exception {
+    public static NXTConnector connect(final String source, CONN_TYPE connection_type) {
 	NXTConnector conn = new NXTConnector();
 
 
@@ -130,22 +113,21 @@ public class test extends Activity {
 	});
 
 	conn.setDebug(true);
-	boolean connected;
+	
 	
 	 switch (connection_type) {
      case LEGO: 
     	 Log.e(source," about to attempt LEGO connection ");
-    	 connected = conn.connectTo("btspp://", NXTComm.LCP);
+    	 conn.connectTo("btspp://", NXTComm.LCP);
     	 
     	 // conn.connectTo("btspp://NXT", NXTComm.LCP) ;
     	 break;
      case LEJOS: 
     	 Log.e(source," about to attempt LEJOS connection " );
-    	 connected = conn.connectTo("btspp://");
+    	 conn.connectTo("btspp://");
     	 break;
       
-     default:  
-    	 throw new Exception("Nobody Home.  Who the $%&$ are you trying to talk to?  Try a different connection type!");  
+     
  }
  
 	 
@@ -155,7 +137,7 @@ public class test extends Activity {
 
     protected void btSend() throws Exception {
     	//we are going to talk to the LeJOS firmware so use LEJOS
-	NXTConnector conn = connect(BT_SEND,LEJOS);
+	NXTConnector conn = connect(BT_SEND,CONN_TYPE.LEJOS);
 	
 	DataOutputStream dos = conn.getDataOut();
 	DataInputStream dis = conn.getDataIn();
@@ -225,7 +207,7 @@ public class test extends Activity {
 	}
 
 	//prepare for threading
-	private class DownloadImageTask extends AsyncTask {
+	private class threadTemplate extends AsyncTask {
 	   
 	     protected void onPostExecute(Object result) {//executes back on UI thread
 	       
