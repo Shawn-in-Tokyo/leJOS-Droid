@@ -7,22 +7,22 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import lejos.nxt.Motor;
-import lejos.nxt.Sound;
-import lejos.nxt.remote.NXTCommand;
+import lejos.android.display.DialogManager;
+import lejos.android.display.ManagedDialogsActivity;
 import lejos.pc.comm.NXTComm;
 import lejos.pc.comm.NXTCommLogListener;
 import lejos.pc.comm.NXTConnector;
 
-import android.app.Activity;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
-public class test extends Activity {
+public class TestLeJOSDroid extends ManagedDialogsActivity {
 
 	public static enum CONN_TYPE {
 		LEJOS, LEGO
@@ -32,13 +32,27 @@ public class test extends Activity {
 	static final String BT_SEND = "BTSend";
 	static final String YOUR_TURN = "YourTurn";
 	static final String CONNECTING = "Connecting...";
-
+	
+	
+	private final DialogManager _dialog_manager =new DialogManager(this,0, START_MESSAGE);
+	TextView _message;
+	
+	static final String START_MESSAGE = "Please make sure you NXT is on and both it and your Android handset have bluetooth enabled";
+	private static final String GO_AHEAD = "Choose one!";
+	protected static final int MESSAGE = 0;
+	
 	/** Called when the activity is first created. */
 	@Override
+	
 	public void onCreate(Bundle savedInstanceState) {
+		
 		super.onCreate(savedInstanceState);
+		registerDialog(_dialog_manager);
+		_dialog_manager.show();
+		
 		setContentView(R.layout.main);
-
+		_message = (TextView)findViewById(R.id.messageText);
+		//updateUI();
 		seupNXJCache();
 		setupTachoCount();
 		setupBTSend();
@@ -82,10 +96,11 @@ public class test extends Activity {
 		Button button = (Button) findViewById(R.id.button1);
 		button.setOnClickListener(new View.OnClickListener() {
 
+	    TachoCount tc = new TachoCount(_dialog_manager, mRedrawHandler);	
+			
 			public void onClick(View arg0) {
 				try {
-					TachoCount tc = new TachoCount();
-
+					_message.setVisibility(TextView.INVISIBLE);
 					tc.countThoseTachos();
 				} catch (Exception e) {
 					Log.e(TACHO_COUNT, "failed to run:" + e.getMessage());
@@ -138,6 +153,7 @@ public class test extends Activity {
 	protected void btSend() throws Exception {
 		Thread t = new Thread() {
 
+			@Override
 			public void run() {
 
 				// we are going to talk to the LeJOS firmware so use LEJOS
@@ -204,9 +220,14 @@ public class test extends Activity {
 	}
 
 	private void seupNXJCache() {
+		
+		
+
+		
 		File root = Environment.getExternalStorageDirectory();
 		Log.i(YOUR_TURN, "Can we write to sdcard?:" + root.canWrite());
-
+		//_message.requestLayout();
+		
 		try {
 			String androidCacheFile = "nxj.cache";
 			File _cache_file = new File(root + "/LeJOS/", androidCacheFile);
@@ -218,26 +239,40 @@ public class test extends Activity {
 				out.close();
 				Log.e(YOUR_TURN, "File seems written to:"
 						+ _cache_file.getName());
+				_message.setText("nxj.cache (record of connection addresses) written to: "+_cache_file.getName()+GO_AHEAD);
+			}else {
+				 
+				_message.setText("nxj.cache file not written as"+ (!root.canWrite()? _cache_file.getName()+" can't be written to sdcard.":" cache already exists.")+GO_AHEAD);
+				 				
+				
 			}
 		} catch (IOException e) {
 			Log.e(YOUR_TURN, "Could not write nxj.cache " + e.getMessage(), e);
 		}
+		
+		_message.setVisibility(View.VISIBLE);
+		_message.requestLayout();
 	}
 
-	// prepare for threading
-	private class threadTemplate extends AsyncTask {
+	
+	 public RefreshHandler mRedrawHandler = new RefreshHandler();
 
-		protected void onPostExecute(Object result) {// executes back on UI
-			// thread
+	   class RefreshHandler extends Handler {
+	      @Override
+	      public void handleMessage(Message msg) {
+	    	  //refractor to recieve messages from different senders -- not always TestLeJOSDroid.TACHO_COUNT
+	    	_message.setText((String)msg.getData().get(TestLeJOSDroid.TACHO_COUNT));
+	    	//are the following necessary?
+	    	_message.setVisibility(View.VISIBLE);
+	  		_message.requestLayout();
+	    
+	      }
 
-		}
+	      public void sleep(long delayMillis) {
+	         this.removeMessages(0);
+	         sendMessageDelayed(obtainMessage(0), delayMillis);
+	      }
+	   };
 
-		@Override
-		protected Object doInBackground(Object... arg0) {// splits off to a
-			// background thread
-			// TODO Auto-generated method stub
-			return null;
-		}
-	}
 
 }
