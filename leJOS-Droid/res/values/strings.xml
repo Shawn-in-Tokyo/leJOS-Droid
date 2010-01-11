@@ -3,7 +3,7 @@
     <string name="hello">こにちは</string>
     <string name="app_name">leJOS-Droid</string>
     <string name="test_1">TachoCount</string>
-    <string name="test_2">USBSend</string>
+    <string name="test_2">BTSend</string>
     <string name="test_3">EmptyTemplate</string>
  
 </resources>

@@ -68,6 +68,7 @@ public class test extends Activity {
 
 			public void onClick(View arg0) {
 				try {
+
 					btSend();
 				} catch (Exception e) {
 					Log.e(BT_SEND, "failed to run:" + e.getMessage());
@@ -84,9 +85,8 @@ public class test extends Activity {
 			public void onClick(View arg0) {
 				try {
 					TachoCount tc = new TachoCount();
-					Log.e(TACHO_COUNT,
-							"should be starting a background thread:");
-					tc.doInBackground(new Object[0]);// not passing in any args
+
+					tc.countThoseTachos();
 				} catch (Exception e) {
 					Log.e(TACHO_COUNT, "failed to run:" + e.getMessage());
 				}
@@ -96,19 +96,20 @@ public class test extends Activity {
 		});
 	}
 
-	protected void btSend() throws Exception {
-		// we are going to talk to the LeJOS firmware so use LEJOS
-		NXTConnector conn = new NXTConnector();
+	public static NXTConnector connect(final String source,
+			final CONN_TYPE connection_type) {
+
+		NXTConnector conn;
+		conn = new NXTConnector();
 
 		conn.addLogListener(new NXTCommLogListener() {
 
 			public void logEvent(String arg0) {
-				Log.e(BT_SEND + " NXJ log:", arg0);
-
+				Log.e(source + " NXJ log:", arg0);
 			}
 
 			public void logEvent(Throwable arg0) {
-				Log.e(BT_SEND + " NXJ log:", arg0.getMessage(), arg0);
+				Log.e(source + " NXJ log:", arg0.getMessage(), arg0);
 
 			}
 
@@ -116,40 +117,84 @@ public class test extends Activity {
 
 		conn.setDebug(true);
 
-		DataOutputStream dos = conn.getDataOut();
-		DataInputStream dis = conn.getDataIn();
+		switch (connection_type) {
+		case LEGO:
+			Log.e(source, " about to attempt LEGO connection ");
+			conn.connectTo("btspp://", NXTComm.LCP);
 
-		for (int i = 0; i < 100; i++) {
-			try {
-				Log.e(BT_SEND, "Sending " + (i * 30000));
-				dos.writeInt((i * 30000));
-				dos.flush();
+			// conn.connectTo("btspp://NXT", NXTComm.LCP) ;
+			break;
+		case LEJOS:
+			Log.e(source, " about to attempt LEJOS connection ");
+			conn.connectTo("btspp://");
+			break;
 
-			} catch (IOException ioe) {
-				Log.e(BT_SEND, "IO Exception writing bytes:");
-				Log.e(BT_SEND, ioe.getMessage());
-				break;
-			}
-
-			try {
-				Log.e(BT_SEND, "Received " + dis.readInt());
-			} catch (IOException ioe) {
-				Log.e(BT_SEND, "IO Exception reading bytes:");
-				Log.e(BT_SEND, ioe.getMessage());
-				break;
-			}
 		}
 
-		try {
-			dis.close();
-			dos.close();
-			conn.close();
-		} finally {
-			dis = null;
-			dos = null;
-			conn = null;
-		}
+		return conn;
 
+	}
+
+	protected void btSend() throws Exception {
+		Thread t = new Thread() {
+
+			public void run() {
+
+				// we are going to talk to the LeJOS firmware so use LEJOS
+				NXTConnector conn = connect(BT_SEND, CONN_TYPE.LEJOS);
+				Log.e(BT_SEND, " after connect:");
+				DataOutputStream dos = conn.getDataOut();
+				DataInputStream dis = conn.getDataIn();
+
+				for (int i = 0; i < 100; i++) {
+					try {
+						Log.e(BT_SEND, "Sending " + (i * 30000));
+						dos.writeInt((i * 30000));
+						dos.flush();
+
+					} catch (IOException ioe) {
+						Log.e(BT_SEND, "IO Exception writing bytes:");
+						Log.e(BT_SEND, ioe.getMessage());
+						break;
+					}
+
+					try {
+						Log.e(BT_SEND, "Received " + dis.readInt());
+					} catch (IOException ioe) {
+						Log.e(BT_SEND, "IO Exception reading bytes:");
+						Log.e(BT_SEND, ioe.getMessage());
+						break;
+					}
+				}
+
+				try {
+					try {
+						dis.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					try {
+						dos.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					try {
+						conn.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} finally {
+					dis = null;
+					dos = null;
+					conn = null;
+				}
+			}
+
+		};
+		t.start();
 	}
 
 	protected void newApp() throws Exception {
@@ -183,13 +228,13 @@ public class test extends Activity {
 	private class threadTemplate extends AsyncTask {
 
 		protected void onPostExecute(Object result) {// executes back on UI
-														// thread
+			// thread
 
 		}
 
 		@Override
 		protected Object doInBackground(Object... arg0) {// splits off to a
-															// background thread
+			// background thread
 			// TODO Auto-generated method stub
 			return null;
 		}

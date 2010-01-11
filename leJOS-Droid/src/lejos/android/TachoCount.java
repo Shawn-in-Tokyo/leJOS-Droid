@@ -9,68 +9,52 @@ import lejos.nxt.remote.NXTCommand;
 import lejos.pc.comm.NXTComm;
 import lejos.pc.comm.NXTCommLogListener;
 import lejos.pc.comm.NXTConnector;
-import android.os.AsyncTask;
 import android.util.Log;
 
-public class TachoCount extends AsyncTask {
+public class TachoCount {
 
-	@Override
-	protected Object doInBackground(Object... params) {
+	public void countThoseTachos() {
 
-		String source = test.TACHO_COUNT;
-		NXTConnector conn = new NXTConnector();
+		Thread ctt = new Thread() {
 
-		conn.addLogListener(new NXTCommLogListener() {
+			public void run() {
 
-			public void logEvent(String arg0) {
-				Log.e(test.TACHO_COUNT + " NXJ log:", arg0);
+				NXTConnector conn = test.connect(test.TACHO_COUNT,
+						CONN_TYPE.LEGO);
+				NXTCommand.getSingleton().setNXTComm(conn.getNXTComm());
 
+				Log.i(test.TACHO_COUNT, "Tachometer A1: "
+						+ Motor.A.getTachoCount());
+				// only have one moment one hand for the moment to test!
+				// Log.i(test.TACHO_COUNT, "Tachometer C1: " +
+				// Motor.C.getTachoCount());
+				Motor.A.rotate(500);
+				// Motor.C.rotate(-5000);
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					Log.e(test.TACHO_COUNT, "Thread.sleep error", e);
+				}
+				Sound.playTone(1000, 1000);
+				Log.i(test.TACHO_COUNT, "Tachometer A2: "
+						+ Motor.A.getTachoCount());
+				// Log.i(test.TACHO_COUNT, "Tachometer C2: " +
+				// Motor.C.getTachoCount());
+
+				if (conn != null) {
+					try {
+						conn.close();
+					} catch (IOException e) {
+						Log.e(test.TACHO_COUNT, "Error closing connection", e);
+					}
+				}
+				Log.i(test.TACHO_COUNT, "run finished");
 			}
 
-			public void logEvent(Throwable arg0) {
-				Log.e(test.TACHO_COUNT + " NXJ log:", arg0.getMessage(), arg0);
+		};
 
-			}
+		ctt.start();
 
-		});
-
-		conn.setDebug(true);
-
-		Log.e(test.TACHO_COUNT, " about to attempt LEGO connection ");
-		conn.connectTo("btspp://", NXTComm.LCP);
-
-		NXTCommand.getSingleton().setNXTComm(conn.getNXTComm());
-
-		Log.i(test.TACHO_COUNT, "1 Tachometer A: " + Motor.A.getTachoCount());
-	    Log.i(test.TACHO_COUNT, "1 Tachometer C: " + Motor.C.getTachoCount());
-		Motor.A.rotate(5000);
-	 	Motor.C.rotate(-5000);
-		
-		Log.i(test.TACHO_COUNT, "before sleep ");
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			 Log.e(test.TACHO_COUNT, e.getMessage(), e);
-		}
-		
-		Sound.playTone(1000, 1000);
-		Log.i(test.TACHO_COUNT, "2 Tachometer A: " + Motor.A.getTachoCount());
-		Log.i(test.TACHO_COUNT, "2 Tachometer C: " + Motor.C.getTachoCount());
-
-		if (conn != null) {
-			try {
-				conn.close();
-			} catch (IOException e) {
-				Log.e(test.TACHO_COUNT, "Error closing connection", e);
-			}
-		}
-		Log.i(test.TACHO_COUNT, "Conn closed: ");
-
-		return "arg check"; // alter to send feedback to ui 
-	}
-
-	protected void onPostExecute(Object result) {// executes back on UI thread
-		Log.i(test.TACHO_COUNT, " onPostExecute ");
 	}
 
 }
