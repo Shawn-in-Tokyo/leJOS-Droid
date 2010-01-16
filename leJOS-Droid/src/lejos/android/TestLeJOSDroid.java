@@ -30,7 +30,8 @@ public class TestLeJOSDroid extends ManagedDialogsActivity {
 
 	public static final String TACHO_COUNT = "TachoCount";
 	static final String BT_SEND = "BTSend";
-	static final String YOUR_TURN = "YourTurn";
+	static final String YOUR_TURN = "Your Turn";
+	static final String NXJ_CACHE = "nxt.cache";
 	static final String CONNECTING = "Connecting...";
 	
 	
@@ -230,7 +231,13 @@ public class TestLeJOSDroid extends ManagedDialogsActivity {
 		
 		try {
 			String androidCacheFile = "nxj.cache";
+			File _LeJOS_dir = new File(root + "/LeJOS");
+			if ( !_LeJOS_dir.exists()) {
+				_LeJOS_dir.mkdir();
+				Log.e(NXJ_CACHE, "creading /LeJOS dir");
+			}
 			File _cache_file = new File(root + "/LeJOS/", androidCacheFile);
+			
 			if (root.canWrite() && !_cache_file.exists()) {
 				FileWriter gpxwriter = new FileWriter(_cache_file);
 				BufferedWriter out = new BufferedWriter(gpxwriter);

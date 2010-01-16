@@ -35,12 +35,9 @@ public class TachoCount {
 				Log.i(TestLeJOSDroid.TACHO_COUNT, "Tachometer A: "
 						+ Motor.A.getTachoCount());
 
-				Message message = new Message();
-				Bundle b = new Bundle();
-				b.putString(TestLeJOSDroid.TACHO_COUNT, "Tachometer A:"+ Motor.A.getTachoCount());
-				message.setData(b);
-				message.what=TestLeJOSDroid.MESSAGE;
-				mRedrawHandler.sendMessage(message);
+				
+				
+				sentMessageToUIThread(TestLeJOSDroid.MESSAGE,TestLeJOSDroid.TACHO_COUNT, "Tachometer A:"+ Motor.A.getTachoCount());
 				// only have one moment one hand for the moment to test!
 				// Log.i(test.TACHO_COUNT, "Tachometer C1: " +
 				// Motor.C.getTachoCount());
@@ -60,9 +57,9 @@ public class TachoCount {
 				// Log.i(test.TACHO_COUNT, "Tachometer C2: " +
 				// Motor.C.getTachoCount());
 			 
-				b.putString(TestLeJOSDroid.TACHO_COUNT, "(after movement) Tachometer A:"+ Motor.A.getTachoCount());
-				message.setData(b);
-				mRedrawHandler.sendMessage(message);
+				//b.putString(TestLeJOSDroid.TACHO_COUNT, "(after movement) Tachometer A:"+ Motor.A.getTachoCount());
+				//message.setData(b);
+				//mRedrawHandler.sendMessage(message);
 				if (conn != null) {
 					try {
 						conn.close();
@@ -71,6 +68,20 @@ public class TachoCount {
 					}
 				}
 				Log.i(TestLeJOSDroid.TACHO_COUNT, "run finished");
+			
+
+}
+
+			private void sentMessageToUIThread(int message_type, String message_type_as_string, String message) {
+				Bundle b = new Bundle();
+				b.putString(message_type_as_string, message);
+				Message message_holder = new Message();
+				message_holder.setData(b);
+				message_holder.what=message_type;
+				mRedrawHandler.sendMessage(message_holder);
+				
+				//"Tachometer A:"+ Motor.A.getTachoCount()
+			   
 			}
 
 		};
