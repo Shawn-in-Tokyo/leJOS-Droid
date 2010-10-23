@@ -57,6 +57,8 @@ public class BTSend extends Thread {
 			dos = null;
 			conn = null;
 		}
+		sentMessageToUIThread("Finished", LeJOSDroid.DISPLAY_TOAST);
+		
 		Looper.loop();
 		Looper.myLooper().quit();
 	}
