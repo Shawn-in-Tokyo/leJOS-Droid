@@ -26,8 +26,6 @@ public class LeJOSDroid extends Activity {
 	public static enum CONN_TYPE {
 		LEGO_LCP, LEJOS_PACKET
 	}
-
-
 	static final String CONNECTING = "Connecting...";
 	protected static final int DISPLAY_TOAST = 10;
 	protected static final int DISPLAY_MESSAGE = 20;
