@@ -5,5 +5,17 @@
     <string name="test_1">TachoCount</string>
     <string name="test_2">BTSend</string>
     <string name="test_3">EmptyTemplate</string>
- 
+    
+    <!--  DeviceListActivity -->
+    <string name="scanning">scanning for devices...</string>
+    <string name="select_device">Select a device to connect</string>
+    <string name="none_paired">No devices have been paired</string>
+    <string name="none_found">No devices found</string>
+    <string name="title_paired_devices">Paired Devices</string>
+    <string name="title_other_devices">Other Available Devices</string>
+    <string name="button_scan">Scan for devices</string>
+    <string name="pairing_message">After pairing, press menu and connect.</string>
+    <string name="wait_till_bt_on">Turning Bluetooth on (to connect to your robot)</string>
+    <string name="bt_off_message">Bluetooth turned off. See you later!</string>
+    
 </resources>

@@ -9,35 +9,69 @@ import lejos.nxt.Sound;
 import lejos.nxt.remote.NXTCommand;
 import lejos.pc.comm.NXTConnector;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
 public class TachoCount {
+	protected static final String TAG = "TachoCount";
 	DialogManager _dialog_manager;  
 	RefreshHandler mRedrawHandler;
-	
-	public TachoCount(DialogManager _dialog_manager,RefreshHandler mRedrawHandler) {
-		 this._dialog_manager=_dialog_manager;
-		 this.mRedrawHandler=mRedrawHandler;
+	private TestLeJOSDroid mActivity;
+	NXTConnector conn;
+
+	public void setConn(NXTConnector conn) {
+		this.conn = conn;
 	}
 
-	public void countThoseTachos() {
+ 
 
+	public TachoCount(DialogManager dialogManager, RefreshHandler mRedrawHandler, TestLeJOSDroid mActivity) {
+		 this._dialog_manager=dialogManager;
+		 this.mRedrawHandler=mRedrawHandler;
+		 this.mActivity=mActivity;
+		 
+	}
+ 
+
+
+
+
+
+
+
+	public void countThoseTachos() {
+		Log.d(TAG,"countThoseTachos"  );
 		Thread ctt = new Thread() {
+
+			
 
 			@Override
 			public void run() {
-
-				NXTConnector conn = TestLeJOSDroid.connect(TestLeJOSDroid.TACHO_COUNT,
+				Looper.prepare();
+				 // Log.d(TAG,"os=null "+(conn.getOutputStream()==null) );
+				  conn = mActivity.connect(TestLeJOSDroid.TACHO_COUNT,
 						CONN_TYPE.LEGO);
+				  Log.d(TestLeJOSDroid.TACHO_COUNT, "conn==null"+(conn==null));
+				  Log.d(TAG,"os=null "+(conn.getOutputStream()==null) );
 				NXTCommand.getSingleton().setNXTComm(conn.getNXTComm());
-				
-				Log.i(TestLeJOSDroid.TACHO_COUNT, "Tachometer A: "
-						+ Motor.A.getTachoCount());
+				Log.d(TestLeJOSDroid.TACHO_COUNT, "conn.getNXTComm()==null"+(conn.getNXTComm()==null));
+				try {
+					Log.i(TestLeJOSDroid.TACHO_COUNT, "Tachometer A: "
+							+ Motor.A.getTachoCount());
+				} catch (Exception e1) {
+					Log.e(TestLeJOSDroid.TACHO_COUNT, "Tachometer A: ",e1);
+					 
+				}
 
 				
 				
-				sentMessageToUIThread(TestLeJOSDroid.MESSAGE,TestLeJOSDroid.TACHO_COUNT, "Tachometer A:"+ Motor.A.getTachoCount());
+				try {
+					sentMessageToUIThread(TestLeJOSDroid.MESSAGE,TestLeJOSDroid.TACHO_COUNT, "Tachometer A:"+ Motor.A.getTachoCount());
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					Log.e(TestLeJOSDroid.TACHO_COUNT, "sentMessageToUIThread   ",e1);
+				}
 				// only have one moment one hand for the moment to test!
 				// Log.i(test.TACHO_COUNT, "Tachometer C1: " +
 				// Motor.C.getTachoCount());
@@ -69,7 +103,8 @@ public class TachoCount {
 				}
 				Log.i(TestLeJOSDroid.TACHO_COUNT, "run finished");
 			
-
+Looper.loop();
+Looper.myLooper().quit();
 }
 
 			private void sentMessageToUIThread(int message_type, String message_type_as_string, String message) {

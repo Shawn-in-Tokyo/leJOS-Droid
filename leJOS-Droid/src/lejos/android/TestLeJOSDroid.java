@@ -9,13 +9,23 @@ import java.io.IOException;
 
 import lejos.android.display.DialogManager;
 import lejos.android.display.ManagedDialogsActivity;
+import lejos.pc.comm.NXTAndroidCon;
 import lejos.pc.comm.NXTComm;
+import lejos.pc.comm.NXTCommAndroid;
+import lejos.pc.comm.NXTCommInputStream;
 import lejos.pc.comm.NXTCommLogListener;
+import lejos.pc.comm.NXTCommOutputStream;
 import lejos.pc.comm.NXTConnector;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
@@ -27,17 +37,18 @@ public class TestLeJOSDroid extends ManagedDialogsActivity {
 	public static enum CONN_TYPE {
 		LEJOS, LEGO
 	}
-
+	private static final int REQUEST_CONNECT_DEVICE = 1000;
 	public static final String TACHO_COUNT = "TachoCount";
 	static final String BT_SEND = "BTSend";
 	static final String YOUR_TURN = "Your Turn";
 	static final String NXJ_CACHE = "nxt.cache";
 	static final String CONNECTING = "Connecting...";
-	
-	
+	private final static String TAG = "TestLeJOSDroid";
+	NXTConnector conn;
+	NXTAndroidCon nxtAndroidCon;
 	private final DialogManager _dialog_manager =new DialogManager(this,0, START_MESSAGE);
 	TextView _message;
-	
+	public TachoCount tc;
 	static final String START_MESSAGE = "Please make sure you NXT is on and both it and your Android handset have bluetooth enabled";
 	private static final String GO_AHEAD = "Choose one!";
 	protected static final int MESSAGE = 0;
@@ -55,6 +66,7 @@ public class TestLeJOSDroid extends ManagedDialogsActivity {
 		_message = (TextView)findViewById(R.id.messageText);
 		//updateUI();
 		seupNXJCache();
+		 tc = new TachoCount(_dialog_manager, mRedrawHandler, this);	
 		setupTachoCount();
 		setupBTSend();
 		setupNewTemplate();
@@ -97,14 +109,16 @@ public class TestLeJOSDroid extends ManagedDialogsActivity {
 		Button button = (Button) findViewById(R.id.button1);
 		button.setOnClickListener(new View.OnClickListener() {
 
-	    TachoCount tc = new TachoCount(_dialog_manager, mRedrawHandler);	
+	     
 			
 			public void onClick(View arg0) {
 				try {
+					
+					//  Log.d(TAG,"onClick os=null "+(conn.getOutputStream()==null) );
 					_message.setVisibility(TextView.INVISIBLE);
 					tc.countThoseTachos();
 				} catch (Exception e) {
-					Log.e(TACHO_COUNT, "failed to run:" + e.getMessage());
+					Log.e(TACHO_COUNT, "failed to run:" + e.getMessage(),e);
 				}
 
 			}
@@ -112,10 +126,10 @@ public class TestLeJOSDroid extends ManagedDialogsActivity {
 		});
 	}
 
-	public static NXTConnector connect(final String source,
+	public NXTConnector connect(final String source,
 			final CONN_TYPE connection_type) {
-
-		NXTConnector conn;
+		Log.d(source, " about to add LEJOS listener ");
+		
 		conn = new NXTConnector();
 
 		conn.addLogListener(new NXTCommLogListener() {
@@ -136,13 +150,15 @@ public class TestLeJOSDroid extends ManagedDialogsActivity {
 		switch (connection_type) {
 		case LEGO:
 			Log.e(source, " about to attempt LEGO connection ");
-			conn.connectTo("btspp://", NXTComm.LCP);
+			//search
+			//set up streams
+		//	conn.connectTo("btspp://", NXTComm.LCP);
 
-			// conn.connectTo("btspp://NXT", NXTComm.LCP) ;
+		 conn.connectTo("btspp://NXT", NXTComm.LCP) ;
 			break;
 		case LEJOS:
 			Log.e(source, " about to attempt LEJOS connection ");
-			conn.connectTo("btspp://");
+		conn.connectTo("btspp://");
 			break;
 
 		}
@@ -150,38 +166,142 @@ public class TestLeJOSDroid extends ManagedDialogsActivity {
 		return conn;
 
 	}
+	
+	@Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+//		if (conn==null){
+//			 Log.d(TAG," onResume conn==null so selectNXTs"  );
+//			selectNXT();
+//		}
+	}
+	
+	void selectNXT() {
+       // Intent serverIntent = new Intent(this, DeviceListActivity.class);
+        //startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
+    }
+	
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+        case REQUEST_CONNECT_DEVICE:
+
+            // When DeviceListActivity returns with a device to connect
+//            if (resultCode == Activity.RESULT_OK) {
+//                // Get the device MAC address
+//                String address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+//               // pairing = data.getExtras().getBoolean(DeviceListActivity.PAIRING);
+//              //  startBTCommunicator(address);
+//                startNXTAndroidCon(address,myHandler );
+//            }
+            
+            default:
+            	break;
+        }
+    }
+	private void startNXTAndroidCon(String address, Handler uiHandler) {
+		 //nxtAndroidCon = new NXTAndroidCon(address, uiHandler, BluetoothAdapter.getDefaultAdapter());
+		 //nxtAndroidCon.start();
+		
+	}
+	
+	// receive messages from the BTCommunicator
+    final Handler myHandler = new Handler() {
+        @Override
+        public void handleMessage(Message myMessage) {
+            switch (myMessage.getData().getInt("message")) {
+//            case NXTAndroidCon.DISPLAY_TOAST:
+//                showToast(myMessage.getData().getString("toastText"));
+//                break;
+            case NXTAndroidCon.STATE_CONNECTED:
+             //   connected = true;
+              //  connectingProgressDialog.dismiss();
+              //  updateButtonsAndMenu();
+            //    sendBTCmessage(BTCommunicator.NO_DELAY, BTCommunicator.GET_FIRMWARE_VERSION, 0, 0);
+            	//conn=new NXTConnector();
+            	Log.d(TAG,"is conn.getNXTComm() null?" +(conn.getNXTComm()==null));
+            	 
+            	if (conn.getNXTComm()==null){
+            	//	NXTCommAndroid nca = new NXTCommAndroid();
+            		//conn.setNxtComm();
+            		//nca.setIs(nxtAndroidCon.getNxtIs());
+            		//nca.setOs(nxtAndroidCon.getNxtOs());
+            	//	conn.setNxtComm(nca);
+            	//	conn.setStreams();
+            	//	tc.setConn(conn);
+            		
+            	} else{
+            	
+            	Log.d(TAG,"is nxtAndroidCon.getNxtIs() null?" +(nxtAndroidCon.getNxtIs()==null));
+            	//redo
+            	//((NXTCommAndroid)conn.getNXTComm()).setIs(nxtAndroidCon.getNxtIs());
+            	//((NXTCommAndroid)conn.getNXTComm()).setOs(nxtAndroidCon.getNxtOs());
+            	}
+            	 
+                break;
+            
+
+              
+            case NXTAndroidCon.STATE_CONNECTERROR:
+                //connectingProgressDialog.dismiss();
+                break;
+            }
+        }
+    };
+    
 
 	protected void btSend() throws Exception {
 		Thread t = new Thread() {
 
 			@Override
 			public void run() {
-
+				
+				
+				 Looper.prepare();
+				//Looper.loop();
+				Log.e(BT_SEND, "no thread run:");
 				// we are going to talk to the LeJOS firmware so use LEJOS
-				NXTConnector conn = connect(BT_SEND, CONN_TYPE.LEJOS);
+				conn = connect(BT_SEND, CONN_TYPE.LEJOS);
 				Log.e(BT_SEND, " after connect:");
+				//DataOutputStream dos = new DataOutputStream(conn.getOutputStream());//conn.getDataOut();
+				//DataOutputStream
 				DataOutputStream dos = conn.getDataOut();
+				Log.d(BT_SEND, "dos == null: "+(dos == null));
 				DataInputStream dis = conn.getDataIn();
+				 Log.d(BT_SEND, "dis == null: "+(dis == null));
+				//DataInputStream dis = new DataInputStream(conn.getInputStream());//conn.getDataIn();
 
+				//Log.e(BT_SEND, " after connect:"+(dos==null));
+				
 				for (int i = 0; i < 100; i++) {
 					try {
 						Log.e(BT_SEND, "Sending " + (i * 30000));
+						
 						dos.writeInt((i * 30000));
 						dos.flush();
-
+						//Thread.yield();
 					} catch (IOException ioe) {
 						Log.e(BT_SEND, "IO Exception writing bytes:");
 						Log.e(BT_SEND, ioe.getMessage());
 						break;
 					}
-
+					Log.e(BT_SEND, "between Sending - Received ");
 					try {
 						Log.e(BT_SEND, "Received " + dis.readInt());
+						//Thread.yield();
 					} catch (IOException ioe) {
 						Log.e(BT_SEND, "IO Exception reading bytes:");
 						Log.e(BT_SEND, ioe.getMessage());
 						break;
+						//Thread.yield();
 					}
+					Log.e(BT_SEND, "after Received ");
 				}
 
 				try {
@@ -208,7 +328,10 @@ public class TestLeJOSDroid extends ManagedDialogsActivity {
 					dos = null;
 					conn = null;
 				}
+				Looper.loop();
+				Looper.myLooper().quit();
 			}
+			
 
 		};
 		t.start();
@@ -221,10 +344,7 @@ public class TestLeJOSDroid extends ManagedDialogsActivity {
 	}
 
 	private void seupNXJCache() {
-		
-		
 
-		
 		File root = Environment.getExternalStorageDirectory();
 		Log.i(YOUR_TURN, "Can we write to sdcard?:" + root.canWrite());
 		//_message.requestLayout();
@@ -241,7 +361,7 @@ public class TestLeJOSDroid extends ManagedDialogsActivity {
 			if (root.canWrite() && !_cache_file.exists()) {
 				FileWriter gpxwriter = new FileWriter(_cache_file);
 				BufferedWriter out = new BufferedWriter(gpxwriter);
-				out.write("Hello world!");
+				out.write("");
 				out.flush();
 				out.close();
 				Log.e(YOUR_TURN, "File seems written to:"
