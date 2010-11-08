@@ -15,11 +15,11 @@ import android.util.Log;
 public class TachoCount extends Thread{
     protected static final String TAG = "TachoCount";
 
-    RefreshHandler mRedrawHandler;
+    UIMessageHandler mRedrawHandler;
     private LeJOSDroid mActivity;
     NXTConnector conn;
 
-    public TachoCount(RefreshHandler mRedrawHandler, LeJOSDroid mActivity) {
+    public TachoCount(UIMessageHandler mRedrawHandler, LeJOSDroid mActivity) {
 	this.mRedrawHandler = mRedrawHandler;
 	this.mActivity = mActivity;
     }

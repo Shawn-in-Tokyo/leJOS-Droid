@@ -1,12 +1,10 @@
 package lejos.android;
 
 import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
+import lejos.pc.comm.NXTCommAndroid;
 import lejos.pc.comm.NXTComm;
 import lejos.pc.comm.NXTCommLogListener;
 import lejos.pc.comm.NXTConnector;
@@ -14,7 +12,6 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
@@ -23,21 +20,26 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class LeJOSDroid extends Activity {
-    private Toast reusableToast;
-    private static final String TOAST_TEXT = "toastText";
-
     public static enum CONN_TYPE {
 	LEJOS_PACKET, LEGO_LCP
     }
-
-    class RefreshHandler extends Handler {
+    class UIMessageHandler extends Handler {
 	@Override
 	public void handleMessage(Message msg) {
-	    // refractor to recieve messages from different senders -- not
-	    // always TestLeJOSDroid.TACHO_COUNT
-	    _message.setText((String) msg.getData().get(
-		    LeJOSDroid.TACHO_COUNT));
-	    // are the following necessary?
+
+	    switch (msg.what) {
+	    case NXTCommAndroid.MESSAGE:
+		_message.setText((String) msg.getData().get(
+			NXTCommAndroid.MESSAGE_CONTENT));
+
+		break;
+
+	    case LeJOSDroid.MESSAGE:
+		_message.setText((String) msg.getData().get(
+			LeJOSDroid.TACHO_COUNT));
+		break;
+	    }
+
 	    _message.setVisibility(View.VISIBLE);
 	    _message.requestLayout();
 
@@ -49,9 +51,13 @@ public class LeJOSDroid extends Activity {
 	}
     }
 
+    private Toast reusableToast;
+
+    private static final String TOAST_TEXT = "toastText";
+
     private static final int REQUEST_CONNECT_DEVICE = 1000;
     public static final String TACHO_COUNT = "TachoCount";
-   
+
     static final String YOUR_TURN = "Your Turn";
     static final String NXJ_CACHE = "nxt.cache";
     static final String CONNECTING = "Connecting...";
@@ -81,7 +87,7 @@ public class LeJOSDroid extends Activity {
 	}
     };
 
-    public RefreshHandler mRedrawHandler = new RefreshHandler();
+    public UIMessageHandler mRedrawHandler = new UIMessageHandler();
 
     public NXTConnector connect(final String source,
 	    final CONN_TYPE connection_type) {
@@ -112,6 +118,7 @@ public class LeJOSDroid extends Activity {
 	case LEJOS_PACKET:
 	    // Log.i(source, " about to attempt LEJOS connection ");
 	    conn.connectTo("btspp://");
+
 	    break;
 	}
 
@@ -124,16 +131,6 @@ public class LeJOSDroid extends Activity {
 
     }
 
-    // @Override
-    // public void onActivityResult(int requestCode, int resultCode, Intent
-    // data) {
-    // switch (requestCode) {
-    // case REQUEST_CONNECT_DEVICE:
-    // default:
-    // break;
-    // }
-    // }
-
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -142,7 +139,7 @@ public class LeJOSDroid extends Activity {
 	setContentView(R.layout.main);
 	_message = (TextView) findViewById(R.id.messageText);
 	seupNXJCache();
-	
+
 	setupTachoCount(this);
 	setupBTSend(this);
 	setupNewTemplate();
@@ -166,8 +163,8 @@ public class LeJOSDroid extends Activity {
 
 	    public void onClick(View arg0) {
 		try {
-		   BTSend btSend = new BTSend(mRedrawHandler, leJOSDroid);
-		   btSend.start();
+		    BTSend btSend = new BTSend(mRedrawHandler, leJOSDroid);
+		    btSend.start();
 		} catch (Exception e) {
 		    Log.e(BTSend.BT_SEND, "failed to run:" + e.getMessage(), e);
 		}
@@ -191,15 +188,9 @@ public class LeJOSDroid extends Activity {
 	});
     }
 
-    private void showToast(String textToShow) {
-	reusableToast.setText(textToShow);
-	reusableToast.show();
-}
-    
     private void setupTachoCount(final LeJOSDroid mActivity) {
 	Button button = (Button) findViewById(R.id.button1);
-	
-	
+
 	button.setOnClickListener(new View.OnClickListener() {
 
 	    public void onClick(View arg0) {
@@ -248,6 +239,11 @@ public class LeJOSDroid extends Activity {
 	}
 	_message.setVisibility(View.VISIBLE);
 	_message.requestLayout();
+    }
+
+    private void showToast(String textToShow) {
+	reusableToast.setText(textToShow);
+	reusableToast.show();
     }
 
 }
