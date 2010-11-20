@@ -21,9 +21,7 @@ import android.util.Log;
 public class NXTCommAndroid implements NXTComm {
 
     private class ConnectThread extends Thread {
-
-	// public boolean connecting;
-	public Boolean socketConnected = false;
+	// public Boolean socketConnected = false;
 	private final BluetoothSocket mmSocket;
 	private final BluetoothDevice mmDevice;
 	private SynchronousQueue<Boolean> connectQueue;
@@ -52,65 +50,63 @@ public class NXTCommAndroid implements NXTComm {
 	    }
 	}
 
+	private void indicateConnectionFailure(IOException e) {
+	    try {
+		// notify calling thread that connection failed
+		connectQueue.put(new Boolean(false));
+		Log.e(TAG,
+			"Connection failure -- unable to connect to socket ", e);
+	    } catch (InterruptedException e1) {
+
+	    }
+
+	    try {
+		mmSocket.close();
+	    } catch (IOException e2) {
+		Log.e(TAG,
+			"unable to close() socket during connection failure",
+			e2);
+	    }
+	}
+
+	private void indicateConnectionSuccess() {
+	    try {// notify calling thread that connection succeeded
+		connectQueue.put(new Boolean(true));
+	    } catch (InterruptedException e) {
+
+	    }
+	    // socketConnected = true;
+	    Log.d(TAG,
+		    "Connection success -- is connected to "
+			    + mmDevice.getName());
+	    yield(); // allow main NXTCommAndroid thread to read connected
+		     // status and finish NXTComm setup
+	}
+
 	@Override
 	public void run() {
 
 	    Log.i(TAG, "BEGIN mConnectThread");
 	    setName("ConnectThread");
 
-	    // Always cancel discovery because it will slow down a connection
-	    // mAdapter.cancelDiscovery();
-
 	    // Make a connection to the BluetoothSocket
+	    // This is a blocking call and will only return on a
+	    // successful connection or an exception
 	    try {
-		// This is a blocking call and will only return on a
-		// successful connection or an exception
 		mmSocket.connect();
 	    } catch (IOException e) {
-		try {
-		    connectQueue.put(new Boolean(false));
-		} catch (InterruptedException e1) {
-
-		}
-
-		connectionFailed();
-		Log.e(TAG, "unable to connect to socket ", e);
-		try {
-		    mmSocket.close();
-		} catch (IOException e2) {
-		    Log.e(TAG,
-			    "unable to close() socket during connection failure",
-			    e2);
-		}
-
-		Log.d(TAG, "run() IOException socketConnected "
-			+ socketConnected);
+		indicateConnectionFailure(e);
 		return;
 	    }
-	    try {
-		connectQueue.put(new Boolean(true));
-	    } catch (InterruptedException e) {
 
-	    }
-	    socketConnected = true;
-	    Log.d(TAG, "run() is socketConnected " + socketConnected);
-	    yield(); // allow main NXTCommAndroid thread to read connected
-		     // status
-	    Log.d(TAG, "Start I.O theads");
-	    // Start the connected thread
-	    connected(mmSocket, mmDevice);
-
-	    // Reset the ConnectThread because we're done
-	    synchronized (this) {
-		Log.d(TAG, "making connect thread null");
-		mConnectThread = null;
-	    }
+	    indicateConnectionSuccess();
+	    startIOThreads(mmSocket, mmDevice);
 	}
 
     }
+
     private class ReadThread extends Thread {
 	public InputStream is;
-	public Handler mHandler;
 	boolean running = true;
 	LinkedBlockingQueue<byte[]> mReadQueue;
 
@@ -167,13 +163,39 @@ public class NXTCommAndroid implements NXTComm {
 	    return bb;
 	}
 
+	private byte[] readLCP() {
+
+	    byte[] reply = null;
+	    int length = -1;
+
+	    try {
+		do {
+		    length = is.read(); // First byte specifies length of
+					// packet.
+		} while (running && length < 0);
+
+		int lengthMSB = is.read(); // Most Significant Byte value
+		length = (0xFF & length) | ((0xFF & lengthMSB) << 8);
+		reply = new byte[length];
+		is.read(reply);
+	    } catch (IOException e) {
+		Log.e(TAG,"readLCP error:", e);
+	    }
+
+	    return (reply == null) ? new byte[0] : reply;
+	}
+
 	@Override
 	public void run() {
 
 	    byte[] tmp_data;
 	    while (running) {
 		tmp_data = null;
-		tmp_data = read();
+		if (nxtInfo.connectionState == NXTConnectionState.LCP_CONNECTED) {
+		    tmp_data = readLCP();
+		} else {
+		    tmp_data = read();
+		}
 		if (tmp_data != null) {
 		    try {
 			mReadQueue.put(tmp_data);
@@ -185,9 +207,9 @@ public class NXTCommAndroid implements NXTComm {
 	}
 
     }
+
     private class WriteThread extends Thread {
 	public OutputStream os;
-	public Handler mHandler;
 	private boolean running = true;
 	LinkedBlockingQueue<byte[]> mWriteQueueT;
 
@@ -197,7 +219,7 @@ public class NXTCommAndroid implements NXTComm {
 		os = socket.getOutputStream();
 		this.mWriteQueueT = mWriteQueue;
 	    } catch (IOException e) {
-		Log.e(TAG, "WriteThread os error ", e);
+		Log.e(TAG, "WriteThread OutputStream error ", e);
 	    }
 	}
 
@@ -208,24 +230,20 @@ public class NXTCommAndroid implements NXTComm {
 
 	@Override
 	public void run() {
-	    Log.d(TAG, "WriteThread started ");
 	    while (running) {
-		Log.d(TAG, "WriteThread running ");
 		try {
 		    byte[] test;
 		    test = mWriteQueueT.take();
-		    Log.d(TAG, "WriteThread run().write " + test.length);
+		 
 		    write(test);
 		} catch (InterruptedException e) {
 		    Log.e(TAG, "WriteThread write error ", e);
 		}
 	    }
-	    //
+	   
 	}
 
 	void write(byte[] data) {
-	    Log.d(TAG, "asked to write data");
-
 	    byte[] lsb_msb = new byte[2];
 	    lsb_msb[0] = (byte) data.length;
 	    lsb_msb[1] = (byte) ((data.length >> 8) & 0xff);
@@ -235,29 +253,22 @@ public class NXTCommAndroid implements NXTComm {
 	    } catch (IOException e) {
 		Log.e(TAG, "WriteThread write error ", e);
 	    }
-	    Log.d(TAG, "data written");
+	
 	}
     }
-    public static final String DEVICE_NAME = "device_name";
+
+  //  public static final String DEVICE_NAME = "device_name";
     // Message types sent from the BluetoothChatService Handler
-    public static final int MESSAGE_STATE_CHANGE = 1;
-    public static final int MESSAGE_READ = 2;
-
-    public static final int MESSAGE_WRITE = 3;
-    public static final int MESSAGE_DEVICE_NAME = 4;
-					       public static final int MESSAGE_TOAST = 5;
-						   // Constants that indicate the current connection state
-    public static final int STATE_NONE = 10; // we're doing nothing
-
-    public static final int STATE_LISTEN = 20; // now listening for incoming
-    // connections
-    public static final int STATE_CONNECTING = 30; // now initiating an outgoing
-
-    // connection
-    public static final int STATE_CONNECTED = 40; // now connected to a remote
-						  // device
+//    public static final int MESSAGE_STATE_CHANGE = 1;
+//    public static final int MESSAGE_READ = 2;
+//    public static final int MESSAGE_WRITE = 3;
+//    public static final int MESSAGE_DEVICE_NAME = 4;
+//
+//    public static final int STATE_NONE = 10;
+//    public static final int STATE_CONNECTING = 20; // now initiating an outgoing
+//    public static final int STATE_CONNECTED = 30; // now connected to a remote
+//						  // device
     private static Vector<BluetoothDevice> devices;
-    private int mState;
     private NXTInfo nxtInfo;
 
     private static Vector<NXTInfo> nxtInfos;
@@ -269,65 +280,76 @@ public class NXTCommAndroid implements NXTComm {
     private WriteThread mWriteThread;
     private static final UUID SERIAL_PORT_SERVICE_CLASS_UUID = UUID
 	    .fromString("00001101-0000-1000-8000-00805F9B34FB");
-    private static final int WRITE = 100;
-    private static final int READ = 200;
+    // private static final int WRITE = 100;
+    // private static final int READ = 200;
 
     public static final String MESSAGE_CONTENT = "String_message";
-    public static final String TOAST = "toast";
     public static final int MESSAGE = 1000;
+    public static final int TOAST = 2000;
+
     private LinkedBlockingQueue<byte[]> mReadQueue;
     private LinkedBlockingQueue<byte[]> mWriteQueue;
 
     protected String mConnectedDeviceName;
 
-    private Handler mRedrawHandler;
+    private Handler mUIMessageHandler;
 
     private SynchronousQueue<Boolean> connectQueue;
 
-    private final Handler mHandler = new Handler() {
-	@Override
-	public void handleMessage(Message msg) {
-	    switch (msg.what) {
-	    case MESSAGE_STATE_CHANGE:
-		// if(D) Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
-		switch (msg.arg1) {
-		case STATE_CONNECTED:
-		    // mTitle.setText(R.string.title_connected_to);
-		    // mTitle.append(mConnectedDeviceName);
-		    // sentMessageToUIThread("Connected to mConnectedDeviceName");
-		    break;
-		case STATE_CONNECTING:
-		    // sentMessageToUIThread("Connecting to mConnectedDeviceName");
-		    // mTitle.setText(R.string.title_connecting);
-		    break;
-
-		case STATE_NONE:
-		    // sentMessageToUIThread("no connection");
-		    // mTitle.setText(R.string.title_not_connected);
-		    break;
-		}
-		break;
-
-	    case MESSAGE_DEVICE_NAME:
-		// save the connected device's name
-		mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
-		// Toast.makeText(getApplicationContext(), "Connected to "
-		// + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
-		break;
-	    case MESSAGE_TOAST:
-		// Toast.makeText(getApplicationContext(),
-		// msg.getData().getString(TOAST),
-		// Toast.LENGTH_SHORT).show();
-		break;
-	    }
-	}
-    };
+    // private final Handler mHandler = new Handler() {
+    // @Override
+    // public void handleMessage(Message msg) {
+    // switch (msg.what) {
+    // case MESSAGE_STATE_CHANGE:
+    // // if(D)
+    // Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
+    // switch (msg.arg1) {
+    // case STATE_CONNECTED:
+    // // mTitle.setText(R.string.title_connected_to);
+    // // mTitle.append(mConnectedDeviceName);
+    // // sentMessageToUIThread("Connected to mConnectedDeviceName");
+    // Log.i(TAG, "Connected to mConnectedDeviceName" + mConnectedDeviceName);
+    // break;
+    // case STATE_CONNECTING:
+    // Log.i(TAG, "Connecting to" + mConnectedDeviceName);
+    // // sentMessageToUIThread("Connecting to mConnectedDeviceName");
+    // // mTitle.setText(R.string.title_connecting);
+    // break;
+    //
+    // case STATE_NONE:
+    // Log.i(TAG, "no connection" + mConnectedDeviceName);
+    // // sentMessageToUIThread("no connection");
+    // // mTitle.setText(R.string.title_not_connected);
+    // break;
+    // }
+    // break;
+    //
+    // case MESSAGE_DEVICE_NAME:
+    // // save the connected device's name
+    // mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
+    // // Toast.makeText(getApplicationContext(), "Connected to "
+    // // + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
+    // break;
+    // // case MESSAGE_CON_FAILED:
+    // // Log.i(TAG, "connection attempt failed");
+    // // // Toast.makeText(getApplicationContext(),
+    // // // msg.getData().getString(TOAST),
+    // // // Toast.LENGTH_SHORT).show();
+    // // break;
+    // }
+    // }
+    // };
 
     public int available() throws IOException {
 	return 0;
     }
 
-    public void close() throws IOException {
+    private void cancelThreads() {
+	if (mConnectThread != null) {
+	    mConnectThread.cancel();
+	    mConnectThread = null;
+	}
+
 	if (mReadThread != null) {
 	    mReadThread.cancel();
 	    mReadThread = null;
@@ -336,8 +358,12 @@ public class NXTCommAndroid implements NXTComm {
 	    mWriteThread.cancel();
 	    mWriteThread = null;
 	}
+    }
+
+    public void close() throws IOException {
+	cancelThreads();
 	mConnectedDeviceName = "";
-	setState(NXTCommAndroid.STATE_NONE);
+	// setState(NXTCommAndroid.STATE_NONE);
     }
 
     private byte[] concat(byte[] data1, byte[] data2) {
@@ -354,62 +380,29 @@ public class NXTCommAndroid implements NXTComm {
 	return data;
     }
 
-    public synchronized void connected(BluetoothSocket socket,
-	    BluetoothDevice device) {
+    public void displayToastOnUIThread(String message) {
+	Message message_holder = formMessage(message);
+	message_holder.what = TOAST;
+	mUIMessageHandler.sendMessage(message_holder);
 
-	// Cancel the thread that completed the connection
-	if (mConnectThread != null) {
-	    mConnectThread.cancel();
-	    mConnectThread = null;
-	}
-
-	Log.d("NXTCommAndroid connected", "socket connected to : "
-		+ socket.getRemoteDevice().getName());
-	mConnectedDeviceName = socket.getRemoteDevice().getName();
-	// Cancel any thread currently running a connection
-	if (mReadThread != null) {
-	    mReadThread.cancel();
-	    mReadThread = null;
-	}
-	if (mWriteThread != null) {
-	    mWriteThread.cancel();
-	    mWriteThread = null;
-	}
-
-	if (mReadQueue != null) {
-	    mReadQueue = null;
-	}
-	if (mWriteQueue != null) {
-	    mWriteQueue = null;
-	}
-
-	mReadQueue = new LinkedBlockingQueue<byte[]>();
-	mWriteQueue = new LinkedBlockingQueue<byte[]>();
-	// Start the thread to manage the connection and perform transmissions
-	mReadThread = new ReadThread(socket, mReadQueue);
-	mReadThread.start();
-
-	mWriteThread = new WriteThread(socket, mWriteQueue);
-	mWriteThread.start();
-
-	// Send the name of the connected device back to the UI Activity
-	Message msg = mHandler.obtainMessage(MESSAGE_DEVICE_NAME);
-	Bundle bundle = new Bundle();
-	bundle.putString(DEVICE_NAME, device.getName());
-	msg.setData(bundle);
-	mHandler.sendMessage(msg);
-
-	setState(STATE_CONNECTED);
     }
 
-    private void connectionFailed() {
-	setState(STATE_LISTEN);
-	// Send a failure message back to the Activity
-	Message msg = mHandler.obtainMessage(MESSAGE_TOAST);
-	Bundle bundle = new Bundle();
-	bundle.putString(TOAST, "Unable to connect device");
-	msg.setData(bundle);
-	mHandler.sendMessage(msg);
+    // private void connectionFailed() {
+    // setState(STATE_NONE);
+    // // Send a failure message back to the Activity
+    // Message msg = mHandler.obtainMessage(MESSAGE_CON_FAILED);
+    // Bundle bundle = new Bundle();
+    // bundle.putString(TOAST, "Unable to connect device");
+    // msg.setData(bundle);
+    // mHandler.sendMessage(msg);
+    // }
+
+    private Message formMessage(String message) {
+	Bundle b = new Bundle();
+	b.putString(MESSAGE_CONTENT, message);
+	Message message_holder = new Message();
+	message_holder.setData(b);
+	return message_holder;
     }
 
     public InputStream getInputStream() {
@@ -439,9 +432,10 @@ public class NXTCommAndroid implements NXTComm {
 
 	    mConnectThread = new ConnectThread(nxtDevice, connectQueue);
 	    mConnectThread.start();
-	    setState(STATE_CONNECTING);
+	    // setState(STATE_CONNECTING);
 
 	    boolean socketConnected = false;
+
 	    try {
 
 		Boolean socketEstablished = connectQueue.take();
@@ -521,6 +515,12 @@ public class NXTCommAndroid implements NXTComm {
 	return nxts;
     }
 
+    public void sendMessageToUIThread(String message) {
+	Message message_holder = formMessage(message);
+	message_holder.what = MESSAGE;
+	mUIMessageHandler.sendMessage(message_holder);
+    }
+
     /**
      * Sends a request to the NXT brick.
      * 
@@ -529,15 +529,17 @@ public class NXTCommAndroid implements NXTComm {
      */
     public synchronized byte[] sendRequest(byte[] message, int replyLen)
 	    throws IOException {
-	//
-	// Log.i(TAG, "sendRequest");
+
+	Log.i(TAG, "sendRequest");
 	// Log.i(TAG, "os==null " + (os == null));
 	// Log.i(TAG, "is==null " + (is == null));
 	// // length of packet (Least and Most significant byte)
 	// // * NOTE: Bluetooth only.
 	// int LSB = message.length;
 	// int MSB = message.length >>> 8;
-	//
+
+	write(message);
+
 	// if (os == null)
 	// return new byte[0];
 	//
@@ -547,51 +549,66 @@ public class NXTCommAndroid implements NXTComm {
 	//
 	// os.write(message);
 	// os.flush();
-	//
-	// if (replyLen == 0)
-	// return new byte[0];
-	//
-	// byte[] reply = null;
-	// int length = -1;
+
+	if (replyLen == 0)
+	    return new byte[0];
+
+	byte[] b = read();
+
+	if (b.length != replyLen) {
+	    throw new IOException("Unexpected reply length");
+	}
+
 	//
 	// if (is == null)
 	// return new byte[0];
-	//
-	// do {
-	// length = is.read(); // First byte specifies length of packet.
-	// } while (length < 0);
-	//
-	// int lengthMSB = is.read(); // Most Significant Byte value
-	// length = (0xFF & length) | ((0xFF & lengthMSB) << 8);
-	// reply = new byte[length];
-	// int len = is.read(reply);
-	// if (len != replyLen)
-	// throw new IOException("Unexpected reply length");
-	//
-	// return (reply == null) ? new byte[0] : reply;
-	return null;
+	return b;
+	// return null;
     }
 
-    public void sentMessageToUIThread(String message) {
-	Log.d(TAG, "sentMessageToUIThread " + message);
-	Bundle b = new Bundle();
-	b.putString(MESSAGE_CONTENT, message);
-	Message message_holder = new Message();
-	message_holder.setData(b);
-	message_holder.what = MESSAGE;
-	Log.d(TAG,
-		"message sent ok: "
-			+ mRedrawHandler.sendMessage(message_holder));
+    // private synchronized void setState(int state) {
+    // mHandler.obtainMessage(MESSAGE_STATE_CHANGE, state, -1).sendToTarget();
+    // }
+
+    public void setUIHander(Handler mUIMessageHandler) {
+	this.mUIMessageHandler = mUIMessageHandler;
+
     }
 
-    private synchronized void setState(int state) {
-	mState = state;
-	mHandler.obtainMessage(MESSAGE_STATE_CHANGE, state, -1).sendToTarget();
-    }
+    public synchronized void startIOThreads(BluetoothSocket socket,
+	    BluetoothDevice device) {
 
-    public void setUIHander(Handler mRedrawHandler) {
-	this.mRedrawHandler = mRedrawHandler;
+	// Cancel the thread that completed the connection
 
+	//
+	// Log.d("NXTCommAndroid connected", "socket connected to : "
+	// + socket.getRemoteDevice().getName());
+	// mConnectedDeviceName = socket.getRemoteDevice().getName();
+	cancelThreads();
+
+	if (mReadQueue != null) {
+	    mReadQueue = null;
+	}
+	if (mWriteQueue != null) {
+	    mWriteQueue = null;
+	}
+
+	mReadQueue = new LinkedBlockingQueue<byte[]>();
+	mWriteQueue = new LinkedBlockingQueue<byte[]>();
+	// Start the thread to manage the connection and perform transmissions
+	mReadThread = new ReadThread(socket, mReadQueue);
+	mReadThread.start();
+
+	mWriteThread = new WriteThread(socket, mWriteQueue);
+	mWriteThread.start();
+
+	// Message msg = mHandler.obtainMessage(MESSAGE_DEVICE_NAME);
+	// Bundle bundle = new Bundle();
+	// bundle.putString(DEVICE_NAME, device.getName());
+	// msg.setData(bundle);
+	// mHandler.sendMessage(msg);
+
+	// setState(STATE_CONNECTED);
     }
 
     public String stripColons(String s) {
