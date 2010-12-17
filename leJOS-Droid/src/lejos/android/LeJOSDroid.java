@@ -9,6 +9,7 @@ import lejos.pc.comm.NXTComm;
 import lejos.pc.comm.NXTCommLogListener;
 import lejos.pc.comm.NXTConnector;
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -105,9 +106,11 @@ public class LeJOSDroid extends Activity {
 	seupNXJCache();
 	setupTachoCount(this);
 	setupBTSend(this);
-	// setupNewTemplate();
+	setupRCNavigationControl(this);
 	reusableToast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
     }
+
+   
 
     @Override
     protected void onPause() {
@@ -136,20 +139,27 @@ public class LeJOSDroid extends Activity {
 	});
     }
 
-    // private void setupNewTemplate() {
-    // Button button;
-    // button = (Button) findViewById(R.id.button3);
-    // button.setOnClickListener(new View.OnClickListener() {
-    //
-    // public void onClick(View arg0) {
-    // try {
-    // newApp();
-    // } catch (Exception e) {
-    // Log.e(TAG, e.getMessage());
-    // }
-    // }
-    // });
-    // }
+ private void setupRCNavigationControl(final LeJOSDroid leJOSDroid) {
+     Button button;
+     button = (Button) findViewById(R.id.button3);
+     button.setOnClickListener(new View.OnClickListener() {
+    
+     public void onClick(View arg0) {
+	 
+	 Intent RCNavigationControl = new Intent(leJOSDroid, lejos.android.RCNavigationControl.class);
+	 startActivity(RCNavigationControl);
+//     try {
+//	  RCNavigationControl rcNavControl = new RCNavigationControl(leJOSDroid);
+//	    _message.setVisibility(View.INVISIBLE);
+//	    rcNavControl.start();
+//     } catch (Exception e) {
+//     Log.e(TAG, e.getMessage());
+//     }
+     }
+     }); 
+ }
+	
+ 
 
     private void setupTachoCount(final LeJOSDroid mActivity) {
 	Button button = (Button) findViewById(R.id.button1);

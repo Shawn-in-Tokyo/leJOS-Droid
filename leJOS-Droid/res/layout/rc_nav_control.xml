@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent" android:layout_height="match_parent">
+
+	<LinearLayout android:id="@+id/view1" android:orientation="vertical"
+		android:layout_width="fill_parent" android:layout_height="wrap_content">
+
+		<ScrollView android:layout_width="fill_parent"
+			android:layout_height="0dip" android:layout_weight="1">
+
+			<LinearLayout android:layout_width="fill_parent"
+				android:layout_height="wrap_content" android:layout_weight="1"
+				android:orientation="vertical" android:paddingTop="5dip"
+				android:paddingBottom="13dip" android:paddingLeft="20dip"
+				android:paddingRight="20dip"><!-- <TextView android:id="@+id/name" android:textAppearance="?android:attr/textAppearanceSmall" 
+					android:layout_width="wrap_content" android:layout_height="wrap_content" 
+					android:layout_marginBottom="5dip" /> -->
+				<TextView android:textAppearance="?android:attr/textAppearanceSmall"
+					android:textStyle="bold" android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:text="@string/name_label" />
+				<EditText android:id="@+id/name_edit" android:singleLine="true"
+					android:layout_width="fill_parent" android:layout_height="wrap_content"
+					android:minWidth="250dip" android:scrollHorizontally="true"
+					android:capitalize="none" android:autoText="false" /><!-- <TextView 
+					android:id="@+id/address" android:textAppearance="?android:attr/textAppearanceSmall" 
+					android:singleLine="true" android:layout_marginTop="2dip" android:layout_width="wrap_content" 
+					android:layout_height="wrap_content" /> -->
+				<TextView android:textAppearance="?android:attr/textAppearanceSmall"
+					android:textStyle="bold" android:singleLine="true"
+					android:layout_marginTop="2dip" android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:text="@string/address_label" />
+				<EditText android:id="@+id/address_edit"
+					android:singleLine="true" android:layout_width="fill_parent"
+					android:layout_height="wrap_content" android:minWidth="250dip"
+					android:scrollHorizontally="true" android:capitalize="none"
+					android:autoText="false" />
+				<TextView android:textAppearance="?android:attr/textAppearanceSmall"
+					android:textStyle="bold" android:singleLine="true"
+					android:layout_marginTop="2dip" android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:text="@string/status_label" />
+				<TextView android:id="@+id/message_status"
+					android:textAppearance="?android:attr/textAppearanceSmall"
+					android:layout_width="wrap_content" android:layout_height="wrap_content"
+					android:layout_marginBottom="5dip" />
+			</LinearLayout>
+		</ScrollView>
+		<FrameLayout android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:background="#c6c3c6"
+			android:minHeight="54dip" android:paddingTop="4dip"
+			android:paddingLeft="2dip" android:paddingRight="2dip">
+			<Button android:id="@+id/ok_button" android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:layout_gravity="center_horizontal"
+				android:minWidth="100dip" android:text="@string/connect_button"
+				android:onClick="handleConnect" />
+		</FrameLayout>
+	</LinearLayout>
+
+
+	<!-- <TextView android:id="@+id/view1" android:layout_width="match_parent" 
+		android:layout_height="match_parent" android:text="@string/tabs_1_tab_1"/> --><!--<TextView android:id="@+id/view2" android:layout_width="match_parent" 
+		android:layout_height="match_parent" android:text="@string/connect_tab"/> -->
+
+	<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:id="@+id/view2" android:layout_width="fill_parent"
+		android:layout_height="fill_parent" android:stretchColumns="1">
+		<TableRow>
+			<Button android:id="@+id/goto_button_id" android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:layout_gravity="center_horizontal"
+				android:minWidth="100dip" android:text="@string/goto_button"
+				android:onClick="handleGoTo" />
+			<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+				android:layout_width="fill_parent" android:layout_height="fill_parent">
+				<TextView android:id="@+id/goto_x_label"
+					android:layout_width="wrap_content" android:layout_height="wrap_content"
+					android:text="X:" />
+				<EditText android:id="@+id/goto_x_edit"
+					android:layout_width="wrap_content" android:layout_height="wrap_content"
+					android:background="@android:drawable/editbox_background"
+					android:layout_toRightOf="@id/goto_x_label" />
+				<TextView android:id="@+id/goto_y_label"
+					android:layout_width="wrap_content" android:layout_height="wrap_content"
+					android:layout_toRightOf="@id/goto_x_edit" android:text="Y:" />
+				<EditText android:id="@+id/goto_y_edit"
+					android:layout_width="wrap_content" android:layout_height="wrap_content"
+					android:background="@android:drawable/editbox_background"
+					android:layout_toRightOf="@id/goto_y_label" />
+
+				<!-- <Button android:id="@+id/ok" android:layout_width="wrap_content" 
+					android:layout_height="wrap_content" android:layout_below="@id/entry" android:layout_alignParentRight="true" 
+					android:layout_marginLeft="10dip" android:text="OK" /> <Button android:layout_width="wrap_content" 
+					android:layout_height="wrap_content" android:layout_toLeftOf="@id/ok" android:layout_alignTop="@id/ok" 
+					android:text="Cancel" /> -->
+			</RelativeLayout>
+		</TableRow>
+
+		<TableRow>
+			<Button android:id="@+id/travel_button_id"
+				android:layout_width="wrap_content" android:layout_height="wrap_content"
+				android:layout_gravity="center_horizontal" android:minWidth="100dip"
+				android:text="@string/travel_button" android:onClick="handleTravel" />
+			<EditText android:id="@+id/travel_edit" android:singleLine="true"
+				android:layout_width="fill_parent" android:layout_height="wrap_content"
+				android:minWidth="250dip" android:scrollHorizontally="true"
+				android:capitalize="none" android:autoText="false" />
+		</TableRow>
+
+		<TableRow>
+			<Button android:id="@+id/rotate_button_id"
+				android:layout_width="wrap_content" android:layout_height="wrap_content"
+				android:layout_gravity="center_horizontal" android:minWidth="100dip"
+				android:text="@string/rotate_button" android:onClick="handleRotate" />
+			<EditText android:id="@+id/rotate_edit" android:singleLine="true"
+				android:layout_width="fill_parent" android:layout_height="wrap_content"
+				android:minWidth="250dip" android:scrollHorizontally="true"
+				android:capitalize="none" android:autoText="false" />
+		</TableRow>
+	</TableLayout>
+
+	<LinearLayout android:id="@+id/view3"
+		android:layout_width="fill_parent" android:layout_height="wrap_content"
+		android:layout_weight="1" android:orientation="vertical"
+		android:paddingTop="5dip" android:paddingBottom="13dip"
+		android:paddingLeft="20dip" android:paddingRight="20dip">
+		<TextView android:textAppearance="?android:attr/textAppearanceSmall"
+			android:textStyle="bold" android:singleLine="true"
+			android:layout_marginTop="2dip" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="@string/x_label" />
+		<TextView android:id="@+id/x" android:textAppearance="?android:attr/textAppearanceSmall"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:minWidth="250dip" android:layout_marginBottom="5dip" />
+		<TextView android:textAppearance="?android:attr/textAppearanceSmall"
+			android:textStyle="bold" android:singleLine="true"
+			android:layout_marginTop="2dip" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="@string/y_label" />
+		<TextView android:id="@+id/y" android:textAppearance="?android:attr/textAppearanceSmall"
+			android:textStyle="bold" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:minWidth="250dip"
+			android:layout_marginBottom="5dip" />
+		<TextView android:textAppearance="?android:attr/textAppearanceSmall"
+			android:textStyle="bold" android:singleLine="true" android:minWidth="250dip"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:text="@string/heading_label" />
+		<TextView android:id="@+id/heading" android:textAppearance="?android:attr/textAppearanceSmall"
+			android:singleLine="true" android:minWidth="250dip"
+			android:layout_width="wrap_content" android:layout_height="wrap_content" />
+	</LinearLayout>
+
+
+</FrameLayout>
