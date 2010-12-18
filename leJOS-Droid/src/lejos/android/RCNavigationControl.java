@@ -67,6 +67,7 @@ public class RCNavigationControl extends TabActivity {
 		
 		if ((mName.getText()==null&&mAddress.getText()==null)||(mName.getText().length()==0&&mAddress.getText().length()==0)) {
 		    mMessage.setText("Enter the NXT name or address" );
+		    mName.setText("Wall-E");
 		    return;
 		}
 		
