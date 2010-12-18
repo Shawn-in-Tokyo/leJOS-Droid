@@ -42,13 +42,14 @@ public class NXTCommAndroid implements NXTComm {
 	}
 
 	public void cancel() {
-	    try {
-		mmSocket.close();
-	    } catch (IOException e) {
-		Log.e(TAG, "close() of connect socket failed", e);
-	    }finally {
-		mmSocket=null;
-	    }
+	    Log.d(TAG,"cancel not closing socket TEST");
+//	    try {
+//		//mmSocket.close();
+//	    } catch (IOException e) {
+//		Log.e(TAG, "close() of connect socket failed", e);
+//	    }finally {
+//		//mmSocket=null;
+//	    }
 	}
 
 	private void relayConnectionSuccess() {
@@ -136,6 +137,7 @@ public class NXTCommAndroid implements NXTComm {
 	    
 	    try {
 		msb = is.read();
+		Log.d(TAG, "msb: "+msb);
 	    } catch (IOException e1) {
 		Log.e(TAG, "ReadThread read error ", e1);
 	    }
@@ -185,11 +187,22 @@ public class NXTCommAndroid implements NXTComm {
 	    byte[] tmp_data;
 	    while (running) {
 		tmp_data = null;
-		if (nxtInfo.connectionState == NXTConnectionState.LCP_CONNECTED) {
-		    tmp_data = readLCP();
-		} else {
+		
+		
+		try {
+		    Log.d(TAG, "nxtInfo==null: "+(nxtInfo==null));
+		    if (nxtInfo.connectionState == NXTConnectionState.LCP_CONNECTED) {
+		        tmp_data = readLCP();
+		    } else {
+		        tmp_data = read();
+		    }
+		} catch (Exception e1) {
+		    Log.e(TAG," err in run caught - try to read next",e1);
 		    tmp_data = read();
+		    // TODO Auto-generated catch block
+		  //  e1.printStackTrace();
 		}
+		
 		if (tmp_data != null) {
 		    try {
 			mReadQueue.put(tmp_data);
@@ -417,6 +430,7 @@ public class NXTCommAndroid implements NXTComm {
 	for (Enumeration<BluetoothDevice> enum_d = devices.elements(); enum_d
 		.hasMoreElements();) {
 	    BluetoothDevice d = enum_d.nextElement();
+	    Log.d(TAG,"creating nxtInfo");
 	    nxtInfo = new NXTInfo();
 
 	    nxtInfo.name = d.getName();
@@ -425,8 +439,11 @@ public class NXTCommAndroid implements NXTComm {
 	    nxtInfo.deviceAddress = d.getAddress();
 	    nxtInfo.protocol = NXTCommFactory.BLUETOOTH;
 
-	    if (name == null || name.equals(nxtInfo.name))
+	    if (name == null || name.equals(nxtInfo.name)) {
+		
+	    Log.d(TAG,"adding "+d.getName());
 		nxtInfos.addElement(nxtInfo);
+	}
 	}
 
 	NXTInfo[] nxts = new NXTInfo[nxtInfos.size()];
