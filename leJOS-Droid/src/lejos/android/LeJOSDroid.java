@@ -115,6 +115,13 @@ public class LeJOSDroid extends Activity {
     @Override
     protected void onPause() {
 	super.onPause();
+	if (conn!=null){
+		try {
+			conn.getNXTComm().close();
+		} catch (IOException e) {
+			 Log.e(TAG, "onPause() error closing NXTComm ",e );
+		}
+	}
     }
 
     @Override

@@ -147,7 +147,10 @@ public class RCNavComms
   private DataOutputStream dataOut;
   private Reader reader = new Reader();
   private NXTConnector connector;
-  private RCNavigationControl control;
+  public NXTConnector getConnector() {
+	return connector;
+}
+private RCNavigationControl control;
   
   
   

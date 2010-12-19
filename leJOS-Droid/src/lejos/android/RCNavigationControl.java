@@ -1,5 +1,7 @@
 package lejos.android;
 
+import java.io.IOException;
+
 import android.app.TabActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -14,7 +16,7 @@ import lejos.pc.comm.NXTConnector;
 
 public class RCNavigationControl extends TabActivity {
     protected static final String TAG = "RCNavigationControl";
-    NXTConnector conn;
+   // NXTConnector conn;
   //  OnClickListener connect;
     private boolean connected;
     private RCNavComms communicator = new RCNavComms(this);
@@ -157,8 +159,15 @@ public class RCNavigationControl extends TabActivity {
 
     @Override
     protected void onPause() {
-	// TODO Auto-generated method stub
+ 
 	super.onPause();
+	try {
+		
+		communicator.getConnector().close();
+		//conn.getNXTComm().close();
+	} catch (Exception e) {
+		 Log.e(TAG, "onPause() error closing NXTComm ",e );
+	}
     }
 
     @Override
