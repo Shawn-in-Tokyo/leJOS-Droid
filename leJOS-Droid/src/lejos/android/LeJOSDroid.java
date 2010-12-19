@@ -192,12 +192,12 @@ public class LeJOSDroid extends Activity {
 
 	try {
 	    String androidCacheFile = "nxj.cache";
-	    File mLeJOS_dir = new File(root + "/LeJOS");
+	    File mLeJOS_dir = new File(root + "/leJOS");
 	    if (!mLeJOS_dir.exists()) {
 		mLeJOS_dir.mkdir();
 
 	    }
-	    File mCacheFile = new File(root + "/LeJOS/", androidCacheFile);
+	    File mCacheFile = new File(root + "/leJOS/", androidCacheFile);
 
 	    if (root.canWrite() && !mCacheFile.exists()) {
 		FileWriter gpxwriter = new FileWriter(mCacheFile);
