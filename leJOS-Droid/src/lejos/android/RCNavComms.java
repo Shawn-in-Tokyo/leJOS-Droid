@@ -37,7 +37,14 @@ public class RCNavComms
   {
     System.out.println(" connecting to " + name + " " + address);
     connector = new NXTConnector();
-    boolean connected = connector.connectTo(name, address, NXTCommFactory.BLUETOOTH);
+    boolean connected;
+    if (name==null&&address==null){
+     connected = connector.connectTo();
+    }else {
+    connected = connector.connectTo(name, address, NXTCommFactory.BLUETOOTH);
+    }
+    
+    
     System.out.println(" connect result " + connected);
     if (!connected)
     {

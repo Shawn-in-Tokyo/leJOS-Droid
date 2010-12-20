@@ -66,19 +66,19 @@ public class RCNavigationControl extends TabActivity {
 		
 		Editable name = mName.getText();
 		Editable address = mAddress.getText();
-		
-		if ((mName.getText()==null&&mAddress.getText()==null)||(mName.getText().length()==0&&mAddress.getText().length()==0)) {
-		    mMessage.setText("Enter the NXT name or address" );
-		    mName.setText("Wall-E");
-		    return;
-		}
+//		
+//		if ((mName.getText()==null&&mAddress.getText()==null)||(mName.getText().length()==0&&mAddress.getText().length()==0)) {
+//		    mMessage.setText("Enter the NXT name or address" );
+//		    mName.setText("Wall-E");
+//		    return;
+//		}
 		
 		mMessage.setText("Connecting to " + name);
 		if (!communicator.connect(name.toString(), address.toString())) {
 		    mMessage.setText("Connection Failed");
 		    connected = false;
 		} else {
-		    mMessage.setText("Connected to " + name);
+		    mMessage.setText("Connected to " + communicator.getConnector().getNXTInfo().name);
 		    connected = true;
 		}
 	    }
