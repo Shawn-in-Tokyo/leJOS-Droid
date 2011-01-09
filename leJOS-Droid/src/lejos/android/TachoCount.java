@@ -26,9 +26,7 @@ public class TachoCount extends Thread {
 	conn = mActivity.connect(CONN_TYPE.LEGO_LCP);
 	NXTCommAndroid nca = (NXTCommAndroid) conn.getNXTComm();
 	NXTCommand.getSingleton().setNXTComm(conn.getNXTComm());
-
 	
-
 	Motor.A.rotate(500);
 	Motor.C.rotate(-500);
 	nca.sendMessageToUIThread("T.A:" + Motor.A.getTachoCount()+" -- "+"T.C:" + Motor.C.getTachoCount() );

@@ -21,9 +21,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class LeJOSDroid extends Activity {
-    public static enum CONN_TYPE {
-	LEJOS_PACKET, LEGO_LCP
-    }
 
     class UIMessageHandler extends Handler {
 	@Override
@@ -54,7 +51,7 @@ public class LeJOSDroid extends Activity {
     }
 
     private Toast reusableToast;
-    private final static String TAG = "LeJOSDroid";
+    
     private  NXTConnector conn;
     private TextView _message;
  
@@ -64,6 +61,12 @@ public class LeJOSDroid extends Activity {
 
     public UIMessageHandler mUIMessageHandler = new UIMessageHandler();
 
+    public static enum CONN_TYPE {
+	LEJOS_PACKET, LEGO_LCP
+    }
+    
+    private final static String TAG = "LeJOSDroid";
+    
     public NXTConnector connect(final CONN_TYPE connection_type) {
 	Log.d(TAG, " about to add LEJOS listener ");
 
@@ -77,9 +80,7 @@ public class LeJOSDroid extends Activity {
 
 	    public void logEvent(Throwable arg0) {
 		Log.e(TAG + " NXJ log:", arg0.getMessage(), arg0);
-
 	    }
-
 	});
 
 	switch (connection_type) {

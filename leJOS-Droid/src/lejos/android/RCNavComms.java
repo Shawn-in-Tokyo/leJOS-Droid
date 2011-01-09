@@ -6,6 +6,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import android.util.Log;
 import lejos.pc.comm.*;
 
 /**
@@ -18,6 +20,7 @@ import lejos.pc.comm.*;
 public class RCNavComms
 {
 
+    private String TAG="RCNavComms";
   /**
    * constructor establishes  call back path of the RCNavigationControl
    * @param control
@@ -25,7 +28,7 @@ public class RCNavComms
   public RCNavComms(RCNavigationControl control)
   {
     this.control = control;
-    System.out.println(" RCNavComms start");
+    Log.d(TAG," RCNavComms start");
   }
 
   /**
@@ -35,7 +38,7 @@ public class RCNavComms
    */
   public boolean connect(String name, String address)
   {
-    System.out.println(" connecting to " + name + " " + address);
+      Log.d(TAG," connecting to " + name + " " + address);
     connector = new NXTConnector();
     boolean connected;
     if (name==null&&address==null){
@@ -45,7 +48,7 @@ public class RCNavComms
     }
     
     
-    System.out.println(" connect result " + connected);
+   Log.d(TAG," connect result " + connected);
     if (!connected)
     {
       return connected;
@@ -81,7 +84,7 @@ public class RCNavComms
       {
         if (reading)  //reads one message at a time
         {
-          System.out.println("reading ");
+         Log.d(TAG,"reading ");
           float x = 0;
           float y = 0;
           float h = 0;
@@ -92,10 +95,10 @@ public class RCNavComms
             y = dataIn.readFloat();
             h = dataIn.readFloat();
             ok = true;
-            System.out.println("data  " + x + " " + y + " " + h);
+           Log.d(TAG,"data  " + x + " " + y + " " + h);
           } catch (IOException e)
           {
-            System.out.println("connection lost");
+           Log.d(TAG,"connection lost");
             count++;
             isRunning = count < 20;// give up
             ok = false;
@@ -140,7 +143,7 @@ public class RCNavComms
       dataOut.flush();
     } catch (IOException e)
     {
-      System.out.println(" send throws exception  " + e);
+     Log.e(TAG," send throws exception  ", e);
     }
     reader.reading = true;  //reader: listen for response
   }

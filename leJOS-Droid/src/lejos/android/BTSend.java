@@ -59,7 +59,7 @@ public class BTSend extends Thread {
 	}
 	Looper.loop();
 	Looper.myLooper().quit();
-	nca.sendMessageToUIThread("");
+	nca.sendMessageToUIThread("");//clear 
 	nca.displayToastOnUIThread("BTSend finished it's run");
     }
 
