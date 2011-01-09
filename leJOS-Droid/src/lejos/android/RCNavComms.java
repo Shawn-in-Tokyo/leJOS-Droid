@@ -79,6 +79,7 @@ public class RCNavComms
     boolean isRunning = false;
     public void run()
     {
+    	setName("RCNavComms read thread");
       isRunning = true;
       while (isRunning)
       {

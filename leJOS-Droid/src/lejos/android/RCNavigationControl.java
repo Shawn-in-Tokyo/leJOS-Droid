@@ -173,6 +173,7 @@ public class RCNavigationControl extends TabActivity {
 
 	@Override
 	public void run() {
+		setName("RCNavigationControl ConnectThread");
 	    Editable name = mName.getText();
 	    Editable address = mAddress.getText();
 	    mMessage.setText("Connecting to " + name);
