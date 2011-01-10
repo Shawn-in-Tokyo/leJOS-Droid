@@ -76,7 +76,6 @@ public class NXTCommAndroid implements NXTComm {
 		@Override
 		public void run() {
 
-			
 			setName("NCA ConnectThread");
 			Log.i(TAG, "BEGIN mConnectThread");
 			// Make a connection to the BluetoothSocket
@@ -103,8 +102,7 @@ public class NXTCommAndroid implements NXTComm {
 		public ReadThread(BluetoothSocket socket, LinkedBlockingQueue<byte[]> mReadQueue) {
 			try {
 				is = socket.getInputStream();
-				Log.d(TAG, "socket is connected to: " + socket.getRemoteDevice().getName());
-				//Log.d(TAG, "is opened in ReadThread constructor"+is.);
+				//Log.d(TAG, "socket is connected to: " + socket.getRemoteDevice().getName());
 				this.mReadQueue = mReadQueue;
 			} catch (IOException e) {
 				Log.e(TAG, "ReadThread is error ", e);
@@ -117,25 +115,21 @@ public class NXTCommAndroid implements NXTComm {
 		}
 
 		private byte[] read() {
-
 			int lsb = -1;
 			try {
-			
 				lsb = is.read();
-
 			} catch (Exception e) {
 				Log.e(TAG, "read err lsb", e);
-
 			}
 
 			if (lsb < 0) {
-				Log.d(TAG, "read lsb val: "+ lsb);
 				return null;
 			}
 			int msb = 0;
 
 			try {
 				msb = is.read();
+
 			} catch (IOException e1) {
 				Log.e(TAG, "ReadThread read error msb", e1);
 			}
@@ -144,17 +138,16 @@ public class NXTCommAndroid implements NXTComm {
 				return null;
 			}
 			int len = lsb | (msb << 8);
-			Log.d(TAG, "read len of bb: "+ lsb);
 			byte[] bb = new byte[len];
 			for (int i = 0; i < len; i++) {
-			  
+
 				try {
 					bb[i] = (byte) is.read();
-					  Log.d(TAG, "bb["+i+"]: "+ bb[i]);
 				} catch (IOException e) {
 					Log.e(TAG, "ReadThread read error data", e);
 				}
 			}
+
 			return bb;
 		}
 
@@ -192,7 +185,6 @@ public class NXTCommAndroid implements NXTComm {
 				if (nxtInfo.connectionState == NXTConnectionState.LCP_CONNECTED) {
 					tmp_data = readLCP();
 				} else {
-				    Log.d(TAG, "attempt read in read thead");
 					tmp_data = read();
 				}
 
@@ -202,8 +194,6 @@ public class NXTCommAndroid implements NXTComm {
 					} catch (InterruptedException e) {
 						Log.e(TAG, "ReadThread queue error ", e);
 					}
-				}else {
-				    Log.d(TAG, "data was not null");
 				}
 			}
 		}
@@ -234,13 +224,9 @@ public class NXTCommAndroid implements NXTComm {
 			setName("NCA - write thread");
 			while (running) {
 				try {
-					byte[] test;
-					test = mWriteQueueT.take();
-					Log.d(TAG, "test.length "+test.length);
-					for (int i=0;i<test.length;i++) {
-					    Log.d(TAG, "test["+i+"]" +test[i]);   
-					}
-					write(test);
+					byte[] data;
+					data = mWriteQueueT.take();
+					write(data);
 				} catch (InterruptedException e) {
 					Log.e(TAG, "WriteThread write error ", e);
 				}
@@ -253,13 +239,11 @@ public class NXTCommAndroid implements NXTComm {
 			lsb_msb[0] = (byte) data.length;
 			lsb_msb[1] = (byte) ((data.length >> 8) & 0xff);
 			try {
-			    Log.d(TAG, "write (concat):  "+(concat(lsb_msb, data)));
 				os.write(concat(lsb_msb, data));
 				os.flush();
 			} catch (IOException e) {
 				Log.e(TAG, "WriteThread write error ", e);
 			}
-
 		}
 	}
 
@@ -463,25 +447,7 @@ public class NXTCommAndroid implements NXTComm {
 	 */
 	public synchronized byte[] sendRequest(byte[] message, int replyLen) throws IOException {
 
-		//Log.i(TAG, "sendRequest");
-		// Log.i(TAG, "os==null " + (os == null));
-		// Log.i(TAG, "is==null " + (is == null));
-		// // length of packet (Least and Most significant byte)
-		// // * NOTE: Bluetooth only.
-		// int LSB = message.length;
-		// int MSB = message.length >>> 8;
-
 		write(message);
-
-		// if (os == null)
-		// return new byte[0];
-		//
-		// // Send length of packet:
-		// os.write((byte) LSB);
-		// os.write((byte) MSB);
-		//
-		// os.write(message);
-		// os.flush();
 
 		if (replyLen == 0)
 			return new byte[0];
@@ -492,11 +458,7 @@ public class NXTCommAndroid implements NXTComm {
 			throw new IOException("Unexpected reply length");
 		}
 
-		//
-		// if (is == null)
-		// return new byte[0];
 		return b;
-		// return null;
 	}
 
 	public void setUIHander(Handler mUIMessageHandler) {
