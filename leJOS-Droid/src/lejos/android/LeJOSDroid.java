@@ -102,6 +102,7 @@ public class LeJOSDroid extends Activity {
     public void onCreate(Bundle savedInstanceState) {
 
 	super.onCreate(savedInstanceState);
+	 
 	setContentView(R.layout.main);
 	_message = (TextView) findViewById(R.id.messageText);
 	seupNXJCache();
@@ -116,8 +117,10 @@ public class LeJOSDroid extends Activity {
     @Override
     protected void onPause() {
 	super.onPause();
+
 	if (conn!=null){
 		try {
+			 Log.d(TAG, "onPause() closing NXTComm " );
 			conn.getNXTComm().close();
 		} catch (IOException e) {
 			 Log.e(TAG, "onPause() error closing NXTComm ",e );
