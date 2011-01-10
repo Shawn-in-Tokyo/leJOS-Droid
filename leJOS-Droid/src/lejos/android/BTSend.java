@@ -22,7 +22,7 @@ public class BTSend extends Thread {
 
     @Override
     public void run() {
-        Log.d(TAG, "BTSend run");
+    Log.d(TAG, "BTSend run");
 	Looper.prepare();
 	conn = mActivity.connect(CONN_TYPE.LEJOS_PACKET);
 	NXTCommAndroid nca = (NXTCommAndroid) conn.getNXTComm();
