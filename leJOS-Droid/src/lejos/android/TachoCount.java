@@ -22,6 +22,7 @@ public class TachoCount extends Thread {
 
     @Override
     public void run() {
+	setName(TAG +" thread");
 	Looper.prepare();
 	conn = mActivity.connect(CONN_TYPE.LEGO_LCP);
 	NXTCommAndroid nca = (NXTCommAndroid) conn.getNXTComm();

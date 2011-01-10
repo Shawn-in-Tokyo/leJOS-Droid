@@ -40,15 +40,10 @@ public class RCNavComms
   {
       Log.d(TAG," connecting to " + name + " " + address);
     connector = new NXTConnector();
-    boolean connected;
-    if (name==null&&address==null){
-     connected = connector.connectTo();
-    }else {
-    connected = connector.connectTo(name, address, NXTCommFactory.BLUETOOTH);
-    }
-    
-    
-   Log.d(TAG," connect result " + connected);
+
+    boolean connected = connector.connectTo(name, address, NXTCommFactory.BLUETOOTH);
+    System.out.println(" connect result " + connected);
+
     if (!connected)
     {
       return connected;

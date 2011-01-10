@@ -22,7 +22,7 @@ public class BTSend extends Thread {
 
     @Override
     public void run() {
-
+        Log.d(TAG, "BTSend run");
 	Looper.prepare();
 	conn = mActivity.connect(CONN_TYPE.LEJOS_PACKET);
 	NXTCommAndroid nca = (NXTCommAndroid) conn.getNXTComm();
@@ -37,6 +37,11 @@ public class BTSend extends Thread {
 		nca.sendMessageToUIThread("sent:" + i * 30000);
 		yield();
 		x = dis.readInt();
+		if (x>0) {
+		    
+		    nca.displayToastOnUIThread("got: "+x);
+		}
+		 Log.d(TAG, "sent:" + i * 30000 + " got:" + x);
 		nca.sendMessageToUIThread("sent:" + i * 30000 + " got:" + x);
 		yield();
 	    } catch (IOException e) {
@@ -47,7 +52,7 @@ public class BTSend extends Thread {
 	}
 
 	try {
-
+Log.d(TAG, "BTSend run loop finished and closing");
 	    dis.close();
 	    dos.close();
 	    conn.close();
