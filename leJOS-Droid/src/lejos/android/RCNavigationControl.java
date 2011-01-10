@@ -57,70 +57,84 @@ public class RCNavigationControl extends TabActivity {
 	//
 	// }
     }
+ 
+	    private void doConnect() {
+		Log.d(TAG,"doConnect");
+		
+		Editable name = mName.getText();
+		Editable address = mAddress.getText();
+		
+		if ((mName.getText()==null&&mAddress.getText()==null)||(mName.getText().length()==0&&mAddress.getText().length()==0)) {
+		    mMessage.setText("Enter the NXT name or address" );
+		    mName.setText("Wall-E");
+		    return;
+		}
+		
+		mMessage.setText("Connecting to " + name);
+		if (!communicator.connect(name.toString(), address.toString())) {
+		    mMessage.setText("Connection Failed");
+		    connected = false;
+		} else {
+		    mMessage.setText("Connected to " + name);
+		    connected = true;
+		}
+	    }
+	//};
+    //}
+    
+	    private void goButtonMouseClicked() {//GEN-FIRST:event_goButtonMouseClicked
+		   if (!connected) return;
+		   
+		
+		   float x; 
+		   float y;
+		   try {
+		       EditText XField =  (EditText) findViewById(R.id.goto_x_edit);
+		       EditText YField =  (EditText) findViewById(R.id.goto_y_edit);
+		       mMessage.setText("GoTo " +XField.getText()+" "+YField.getText());
+		      
+			   x = Float.parseFloat(XField.getText().toString());
+			   y = Float.parseFloat(YField.getText().toString());
+			   System.out.println("Sent "+Command.GOTO+" x "+x+" y "+y);
+			   communicator.send(Command.GOTO,x,y);
+			   mMessage.setText("waiting for data");
+		   } catch (NumberFormatException e) {
+			   mMessage.setText("Invalid x, y values");
+		   }
+		}//GEN-LAST:event_goButtonMouseClicked
 
-    private void doConnect() {
-	Log.d(TAG, "doConnect");
-	mConnectThread = new ConnectThread();
-	mConnectThread.start();
-    }
+		private void travelButtonMouseClicked() {//GEN-FIRST:event_travelButtonMouseClicked
+		  if (!connected) return;
+		  EditText distanceField =  (EditText) findViewById(R.id.travel_edit);
+		  mMessage.setText("Travel "+distanceField.getText());
+		  float distance;
+		  try {
+			  distance = Float.parseFloat(distanceField.getText().toString());
+			  System.out.println("Sent "+Command.TRAVEL+" "+distance);
+			  communicator.send(Command.TRAVEL,distance);
+			  mMessage.setText("waiting for data");
+		  } catch (NumberFormatException e) {
+			   mMessage.setText("Invalid distance value");
+		  }
+		}//GEN-LAST:event_travelButtonMouseClicked
 
-    // };
-    // }
-
-    private void goButtonMouseClicked() {// GEN-FIRST:event_goButtonMouseClicked
-	if (!connected)
-	    return;
-
-	float x;
-	float y;
-	try {
-	    EditText XField = (EditText) findViewById(R.id.goto_x_edit);
-	    EditText YField = (EditText) findViewById(R.id.goto_y_edit);
-	    mMessage.setText("GoTo " + XField.getText() + " "
-		    + YField.getText());
-
-	    x = Float.parseFloat(XField.getText().toString());
-	    y = Float.parseFloat(YField.getText().toString());
-	    Log.d(TAG, "Sent " + Command.GOTO + " x " + x + " y " + y);
-	    communicator.send(Command.GOTO, x, y);
-	    mMessage.setText("waiting for data");
-	} catch (NumberFormatException e) {
-	    mMessage.setText("Invalid x, y values");
-	}
-    }// GEN-LAST:event_goButtonMouseClicked
-
-    private void travelButtonMouseClicked() {// GEN-FIRST:event_travelButtonMouseClicked
-	if (!connected)
-	    return;
-	EditText distanceField = (EditText) findViewById(R.id.travel_edit);
-	mMessage.setText("Travel " + distanceField.getText());
-	float distance;
-	try {
-	    distance = Float.parseFloat(distanceField.getText().toString());
-	    Log.d(TAG, "Sent " + Command.TRAVEL + " " + distance);
-	    communicator.send(Command.TRAVEL, distance);
-	    mMessage.setText("waiting for data");
-	} catch (NumberFormatException e) {
-	    mMessage.setText("Invalid distance value");
-	}
-    }// GEN-LAST:event_travelButtonMouseClicked
-
-    private void rotateButtonMouseClicked() {// GEN-FIRST:event_rotateButtonMouseClicked
-	if (!connected)
-	    return;
-	EditText angleField = (EditText) findViewById(R.id.rotate_edit);
-	mMessage.setText("Rotate " + angleField.getText());
-	float angle;
-	try {
-	    angle = Float.parseFloat(angleField.getText().toString());
-	    Log.d(TAG, "Sent " + Command.ROTATE + " " + angle);
-	    communicator.send(Command.ROTATE, angle);
-	    mMessage.setText("waiting for data");
-	} catch (NumberFormatException e) {
-	    mMessage.setText("Invalid angle value");
-	}
-    }
-
+		private void rotateButtonMouseClicked() {//GEN-FIRST:event_rotateButtonMouseClicked
+		  if (!connected) return;
+		  EditText angleField =  (EditText) findViewById(R.id.rotate_edit);
+		  mMessage.setText("Rotate "+angleField.getText());
+		  float angle;
+		  try {
+			  angle = Float.parseFloat(angleField.getText().toString());
+			  System.out.println("Sent "+Command.ROTATE+" "+angle);
+			  communicator.send(Command.ROTATE,angle);
+			  mMessage.setText("waiting for data");
+		  } catch (NumberFormatException e) {
+			   mMessage.setText("Invalid angle value");	  
+		  }
+		}
+	    
+	    
+ 
     public void handleGoTo(View v) {
 	goButtonMouseClicked();
     }
