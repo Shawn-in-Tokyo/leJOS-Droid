@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import lejos.pc.comm.*;
 
@@ -19,16 +22,17 @@ import lejos.pc.comm.*;
  */
 public class RCNavComms
 {
-
+	Handler mUIMessageHandler;
     private String TAG="RCNavComms";
   /**
    * constructor establishes  call back path of the RCNavigationControl
+ * @param mUIMessageHandler 
    * @param control
    */
-  public RCNavComms(RCNavigationControl control)
+  public RCNavComms(Handler mUIMessageHandler)
   {
-    this.control = control;
     Log.d(TAG," RCNavComms start");
+    this.mUIMessageHandler=mUIMessageHandler;
   }
 
   /**
@@ -61,6 +65,8 @@ public class RCNavComms
     }
     return connected;
   }
+  
+  
 
   /**
    * inner class to monitor for an incoming message after a command has been sent <br>
@@ -101,7 +107,7 @@ public class RCNavComms
           }
           if (ok)
           {
-            control.showtRobotPosition(x, y, h);
+        	 sendPosToUIThread(x, y, h);
             reading = false;
           }
           try
@@ -115,6 +121,12 @@ public class RCNavComms
       }// if reading
       Thread.yield();
     }//while is running
+    
+ 
+  }
+  
+   void end(){
+	  reader.isRunning=false;
   }
 /**
  * sends a command with a variable number of float parameters.
@@ -156,8 +168,15 @@ public class RCNavComms
   public NXTConnector getConnector() {
 	return connector;
 }
-private RCNavigationControl control;
-  
+
+  public void sendPosToUIThread(float x, float y, float h) {
+  	float[] pos= {x,y,h};
+  	Bundle b = new Bundle();
+  	b.putFloatArray(RCNavigationControl.ROBOT_POS, pos);
+  	Message message_holder = new Message();
+		message_holder.setData(b);
+		mUIMessageHandler.sendMessage(message_holder);
+	}
   
   
 }

@@ -13,9 +13,6 @@ import java.util.concurrent.SynchronousQueue;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 public class NXTCommAndroid implements NXTComm {
@@ -262,14 +259,8 @@ public class NXTCommAndroid implements NXTComm {
 
 	private static final UUID SERIAL_PORT_SERVICE_CLASS_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-	public static final String MESSAGE_CONTENT = "String_message";
-	public static final int MESSAGE = 1000;
-	public static final int TOAST = 2000;
-
 	private LinkedBlockingQueue<byte[]> mReadQueue;
 	private LinkedBlockingQueue<byte[]> mWriteQueue;
-
-	private Handler mUIMessageHandler;
 
 	private SynchronousQueue<Boolean> connectQueue;
 
@@ -313,20 +304,25 @@ public class NXTCommAndroid implements NXTComm {
 		return data;
 	}
 
-	public void displayToastOnUIThread(String message) {
-		Message message_holder = formMessage(message);
-		message_holder.what = TOAST;
-		mUIMessageHandler.sendMessage(message_holder);
+	//	public void displayToastOnUIThread(Message message) {
+	//		mUIMessageHandler.sendMessage(message);
+	//	}
+	//
+	//	public void displayToastOnUIThread(String message) {
+	//		Message message_holder = formMessage(message);
+	//		message_holder.what = TOAST;
+	//		mUIMessageHandler.sendMessage(message_holder);
+	//	}
 
-	}
+	//	public void sendMessageToUIThread(String message) {
+	//		Message message_holder = formMessage(message);
+	//		message_holder.what = MESSAGE;
+	//		mUIMessageHandler.sendMessage(message_holder);
+	//	}
 
-	private Message formMessage(String message) {
-		Bundle b = new Bundle();
-		b.putString(MESSAGE_CONTENT, message);
-		Message message_holder = new Message();
-		message_holder.setData(b);
-		return message_holder;
-	}
+	//	public void sendMessageToUIThread(Message message) {
+	//		mUIMessageHandler.sendMessage(message);
+	//	}
 
 	public InputStream getInputStream() {
 		return new NXTCommInputStream(this);
@@ -433,12 +429,6 @@ public class NXTCommAndroid implements NXTComm {
 		return nxts;
 	}
 
-	public void sendMessageToUIThread(String message) {
-		Message message_holder = formMessage(message);
-		message_holder.what = MESSAGE;
-		mUIMessageHandler.sendMessage(message_holder);
-	}
-
 	/**
 	 * Sends a request to the NXT brick.
 	 * 
@@ -459,11 +449,6 @@ public class NXTCommAndroid implements NXTComm {
 		}
 
 		return b;
-	}
-
-	public void setUIHander(Handler mUIMessageHandler) {
-		this.mUIMessageHandler = mUIMessageHandler;
-
 	}
 
 	public synchronized void startIOThreads(BluetoothSocket socket, BluetoothDevice device) {
